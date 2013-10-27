@@ -9,15 +9,18 @@
    * @author William Henrihque Martins - 12104965-4 - <william.henrihque@acad.pucrs.br>
    */
   import java.io.*;
+  import java.util.Iterator;
+  import java.util.Map;
+  import java.util.HashMap;
 %}
 
 %token EQEQ DIF GT GTE LT LTE IF BREAK CONST ELSE CLASS NEW READ WRITE VOID WHILE RETURN IDENT NUMBER ADDITIVESUM ADDITIVESUB LOGICALAND LOGICALOR CHARCONST
 
-%type <sval> IDENT
+%type <sval> IDENT, Type
 
 %%
 
-Program    : CLASS IDENT ListDecl '{' ListMethodsDecl '}'
+Program    : CLASS IDENT { pushScope(currentScope.addType($2)); } ListDecl '{' ListMethodsDecl '}' { popScope(currentScope); } { showSymbols(universe, 0); }
            ;
 
 ListDecl   : ConstDecl ListDecl
@@ -29,23 +32,23 @@ ConstDecl  : CONST Type IDENT '=' NUMBER ';'
 	   | CONST Type IDENT '=' CHARCONST';'
 	   ;
 
-VarDecl    : Type IDENT ListIDENT ';';
+VarDecl    : Type IDENT { currentScope.addLocal($1, $2); currentType = $1; System.out.println(currentScope.name + " - " + $2); } ListIDENT ';';
 
-ListIDENT  : ',' IDENT ListIDENT
+ListIDENT  : ',' IDENT { currentScope.addLocal(currentType, $2); } ListIDENT
 	   |
 	   ;
 
-ClassDecl  : CLASS IDENT '{' ListVarDecl '}';
+ClassDecl  : CLASS IDENT { pushScope(currentScope.addType($2)); } '{' ListVarDecl '}' { popScope(currentScope); }
 
 ListVarDecl: VarDecl ListVarDecl
            | 
            ;
-MethodDecl : Type IDENT '(' ')' ListVarDecl Block
-           | VOID IDENT '(' ')' ListVarDecl Block
-           | Type IDENT '(' FormPars ')' ListVarDecl Block
-           | VOID IDENT '(' FormPars ')' ListVarDecl Block
+MethodDecl : Type IDENT '(' { pushScope(currentScope.addLocal($1, $2)); } ')' ListVarDecl Block
+           | VOID IDENT '(' { pushScope(currentScope.addLocal("void", $2)); } ')' ListVarDecl Block
+           | Type IDENT '(' { pushScope(currentScope.addLocal($1, $2)); } FormPars ')' ListVarDecl Block
+           | VOID IDENT '(' { pushScope(currentScope.addLocal("void", $2)); } FormPars ')' ListVarDecl Block
            ;
-ListMethodsDecl: MethodDecl ListMethodsDecl 
+ListMethodsDecl: MethodDecl { popScope(currentScope); } ListMethodsDecl 
            | 
 	   ;
 
@@ -161,6 +164,8 @@ Mulop        : '*'
 
   private Yylex lexer;
   private static Symbol universe;
+  private static Symbol currentScope;
+  private static String currentType;
 
   private int yylex () {
     int yyl_return = -1;
@@ -174,6 +179,32 @@ Mulop        : '*'
     return yyl_return;
   }
 
+  public void pushScope(Symbol s) {
+    s.parent = currentScope;
+    currentScope = s;
+  }
+
+  public void popScope(Symbol s) {
+    currentScope = s.parent;
+  }
+
+  public void showSymbols(Symbol s, int level) {
+    for(int i = 0; i < level; i += 1) {
+      System.out.print(" ");
+    }
+    System.out.println("[" + s.name + "]");
+    Iterator it = s.locals.entrySet().iterator();
+    while(it.hasNext()) {
+      for(int i = 0; i < level + 1; i += 1) {
+        System.out.print(" ");
+      }
+      Map.Entry pairs = (Map.Entry) it.next();
+      System.out.println(pairs.getKey() + " - " + ((Symbol)pairs.getValue()).name);
+      if(!((Symbol)pairs.getValue()).locals.isEmpty()) {
+        showSymbols(((Symbol)pairs.getValue()), level + 1);
+      }
+    }
+  }
 
   public void yyerror (String error) {
     System.err.println ("Error: " + error);
@@ -192,7 +223,10 @@ Mulop        : '*'
   public static void main(String args[]) throws IOException {
     System.out.println("");
     universe = new Symbol();
+    universe.name = "Universe";
     universe.addBasicTypes();
+
+    currentScope = universe;
 
     Parser yyparser;
     if ( args.length > 0 ) {

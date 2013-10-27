@@ -15,7 +15,9 @@ public class Symbol {
 
 	Kinds kind;
 	String name;
+	String type;
 	HashMap<String,Symbol> locals;
+	Symbol parent;
 
 	public Symbol() {
 		locals = new HashMap<String,Symbol>();
@@ -26,6 +28,16 @@ public class Symbol {
 		s.name = name;
 
 		s.kind = Kinds.Type;
+
+		locals.put(name, s);
+		return s;
+	}
+
+	public Symbol addLocal(String type, String name) {
+		Symbol s = new Symbol();
+		s.name = name;
+		s.kind = Kinds.Meth;
+		s.type = type;
 
 		locals.put(name, s);
 		return s;
