@@ -65,8 +65,8 @@ ListMethodsDecl: MethodDecl { popScope(currentScope); } ListMethodsDecl
            | 
 	   ;
 
-FormPars   : Type IDENT
-           | Type IDENT ',' FormPars
+FormPars   : Type IDENT { currentScope.addLocal($1, $2); }
+           | Type IDENT { currentScope.addLocal($1, $2); } ',' FormPars
            ;
 
 
