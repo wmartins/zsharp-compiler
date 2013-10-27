@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Relatório</title>
+  <style type="text/css">
+    body {
+      font-size: 10px;
+    }
+    h1 {
+      font-size: 2.2em;
+    }
+    h2 {
+      font-size: 1.8em;
+    }
+    p,
+    pre {
+      font-size: 1.6em;
+    }
+    code {
+      font-size: 1.0em;
+    }
+  </style>
+</head>
+<body>
+  <article>
+    <h1>Relatório sobre a implementação de um analisador léxico e um analisador sintático para a linguagem ZSharp (Z#).</h1>
+    <section id="about">
+      <h1>1. Sobre este trabalho</h1>
+      <p>Este trabalho foi implementado com o intuito de servir como um estudo sobre a disciplina de compiladores, ministrada pelo professor Alexandre Agustini na Pontifícia Universidade Católica do Rio Grande do Sul (PUCRS).</p>
+      <p>Neste, foi realizado o desenvolvimento de um analisador léxico e um analisador sintático para um subconjunto reduzido da linguagem C#, denominado Z# (<a href="http://dotnet.jku.at/courses/CC/">http://dotnet.jku.at/courses/CC/</a>).</p>
+      <h2>1.1. Autores</h2>
+      <p>Italo Lobato Qualisoni - 12104861-5 - <a href="mailto:italo.qualisoni@acad.pucrs.br">italo.qualisoni@acad.pucrs.br</a></p>
+      <p>William Henrihque Martins - 12104965-4 - <a href="mailto:william.henrihque@acad.pucrs.br">william.henrihque@acad.pucrs.br</a></p>
+    </section>
+    <section>
+      <h1>2. Ambiente de desenvolvimento</h1>
+      <p>Para o desenvolvimento deste, foi utilizado o sistema operacional Linux, mais especificamente utilizando as distribuições Ubuntu e Lubuntu.</p>
+    </section>
+    <section>
+      <h1>3. Estrutura de diretórios</h1>
+      <p>Os arquivos e diretórios do projeto encontram-se organizados da seguinte forma:</p>
+<pre>
+./bin/                 - binários relacionados ao projeto
+  JFlex.jar            - cópia local do programa JFlex
+  yacc.linux           - cópia local do programa Byacc/J
+
+./dist/                - diretório que recebe o projeto inteiro compilado usando a compilação pelo Makefile
+
+./doc/                 - documentação do projeto
+  Relatorio.doc        - relatório da implementação da solução
+
+./samples/             - diretório contendo programas exemplo
+
+./src/                 - código fonte do projeto
+  lexical/             - código fonte relacionado a parte léxica
+      zsharp.flex      - especificação léxica para o analisador léxico
+
+  syntactic/           - código fonte relacionado a parte sintática
+      ZSharpASAR.y     - especificação sintática para o analisador sintático
+
+./tests/               - diretório contendo testes da solução
+  test_all.sh          - script para testar todos os arquivos contidos na pasta samples
+  
+./Makefile             - arquivo makefile para a compilação do projeto
+</pre>
+    </section>
+    <section>
+      <h1>4. Instruções de compilação</h1>
+      <div id="software-requirements">
+        <h2>4.1. Softwares utilizados</h2>
+        <p>Utilizamos basicamente dois programas para a geração dos analisadores:</p>
+        <p id="lexical">Para o léxico, foi utilizado o <a href="http://jflex.de/">JFlex</a>.</p>
+        <p id="syntactic">Para o sintático, foi utilizado o <a href="http://byaccj.sourceforge.net">Byacc/J</a>.</p>
+      </div>
+      <div id="compilation-instructions">
+        <h2>4.2. Realizando a compilação do projeto</h2>
+        <div id="compilation-using-make">
+          <p>
+              Para uma compilação simples, basta utilizar o comando <code>make</code> na raiz do projeto, tal comando fará com que o projeto seja compilado para a pasta 'dist'.
+          </p>
+        </div>
+      </div>
+      <div id="solve-compilation-problems">
+        <h2>4.3. Problemas de compilação utilizando Linux 64 bits</h2>
+        <p>
+          Encontramos um pequeno problema de compilação utilizando <code>make</code> no Ubuntu 13.04 64 bits. O problema se dá devido ao fato de que o programa yacc.linux é um programa de 32 bits. Para resolver, basta instalar o pacote <code>ia32-libs-multiarch</code> para resolver o problema. Para isso, simplesmente execute o comando a seguir:
+<pre>
+  sudo apt-get install ia32-libs-multiarch
+</pre>
+        </p>
+      </div>
+    </section>
+    <section>
+      <h1>5. Utilizando o analisador léxico</h1>
+      <p>Basta utilizar o comando <code>java Yylex &lt;nome-do-arquivo&gt;</code> para que o analisador léxico seja executado. A saída desse programa é no console, portanto, para jogar a saída para um arquivo basta utilizar o comando <code>java Yylex &lt;nome-do-arquivo&gt; &gt;&gt; &lt;meu-arquivo-de-saida&gt;</code>.</p>
+      <p>Ainda existe uma outra maneira utilizando o modo interativo. Para tal, basta executar o comando <code>java Yylex</code> que será aberto o terminal interativo. Então, basta digitar a entrada e apertar a tecla &lt;ENTER&gt;, dessa forma, cada token reconhecido será mostrado da seguinte forma:</p>
+      <p>token: NUMERO_DO_TOKEN &lt;TOKEN&gt;</p>
+      <p>Onde "NUMERO_DO_TOKEN" indica o número do token reconhecido e "TOKEN" indica o que foi digitado.</p>
+    </section>
+    <section>
+      <h1>6. Utilizando o analisador sintático</h1>
+      <p>Basta utilizar o comando <code>java Parser &lt;nome-do-arquivo&gt;</code> para que o analisador sintático seja executado. A saída desse programa é no console, portanto, para jogar a saída para um arquivo basta utilizar o comando <code>java Parser &lt;nome-do-arquivo&gt; &gt;&gt; &lt;meu-arquivo-de-saida&gt;</code>.</p>
+      <p>Ainda existe uma outra maneira utilizando o modo interativo. Para tal, basta executar o comando <code>java Parser</code> que será aberto o terminal interativo. Então, basta digitar a entrada e apertar a tecla &lt;ENTER&gt;.</p>
+    </section>
+    <section>
+      <h1>7. Testes da solução</h1>
+      <p>Existem 10 exemplos de código Z# que foram fornecidos para download no site <a href="http://dotnet.jku.at/courses/CC/">http://dotnet.jku.at/courses/CC/</a> e estão localizados localmente na pasta 'samples'. Dentre os exemplos, apenas 1 possui erros no código, portanto, é o único arquivo que não irá compilar, apresentando erros de compilação.</p>
+      <p>Os arquivos da pasta samples encontram-se da seguinte forma:</p>
+<pre>
+  samples/
+    AllProdsWithErrors.zs         - Arquivo com erros de código. <strong>NÃO</strong> deve compilar.
+    AllProds.zs                   - Arquivo correto. Deve compilar.
+    BubbleSort.zs                 - Arquivo correto. Deve compilar.
+    P.zs                          - Arquivo correto. Deve compilar.
+    QuickSort2.zs                 - Arquivo correto. Deve compilar.
+    QuickSort.zs                  - Arquivo correto. Deve compilar.
+    StudentList.zs                - Arquivo correto. Deve compilar.
+    TestBreak.zs                  - Arquivo correto. Deve compilar.
+    TestBuiltInFuncs.zs           - Arquivo correto. Deve compilar.
+    TestNoRetFunc.zs              - Arquivo correto. Deve compilar.
+</pre>
+    <h2>7.1. Utilizando testes automatizados</h2>
+    <p>Dentro da pasta 'tests', fizemos a criação de um script em bash para o teste automático de todos os exemplos localizados na pasta 'samples', tal script foi chamado de 'test_all.sh'. Dessa forma, esse script faz a tentativa de compilação de todos os arquivos da pasta 'samples', mostrando a mensagem 'done!' quando a compilação é finalizada e, em caso de erro, mostrando a saída de erro que o compilador gera.</p>
+    <p>Para executar esses testes, basta entrar na pasta 'tests' e executar o script 'test_all.sh'.</p>
+    <h2>7.2. Execução do teste automatizado</h2>
+    <p>Rodando o comando <code>./test_all.sh</code>, obtivemos a seguinte saída:</p>
+<pre>
+
+=============== Executing tests ===============
+
+Testing [AllProdsWithErrors.zs] - this file must NOT compile
+Error: syntax error
+Line: 3
+Column: 17
+Error: stack underflow. aborting...
+Line: 3
+Column: 17
+done!
+Testing [AllProds.zs] - this file must compile
+done!
+Testing [BubbleSort.zs] - this file must compile
+done!
+Testing [P.zs] - this file must compile
+done!
+Testing [QuickSort2.zs] - this file must compile
+done!
+Testing [QuickSort.zs] - this file must compile
+done!
+Testing [StudentList.zs] - this file must compile
+done!
+Testing [TestBreak.zs] - this file must compile
+done!
+Testing [TestBuiltInFuncs.zs] - this file must compile
+done!
+Testing [TestNoRetFunc.zs] - this file must compile
+done!
+</pre>
+      <p>Com esses resultados, mostramos que a nossa solução funciona para esses 10 casos, mostrando assim que a implementação está correta e funciona conforme especificado.</p>
+    <h2>7.3. Execução do teste automatizado a partir do comando <code>make test</code></h2>
+    <p>O comando <code>make test</code> irá recompilar a estrutura lexica e sintatica e executar em seguida o comando <code>./test_all.sh</code>, gerando a saída da recompilação seguida dos resultados dos testes presentes na pasta 'samples'.</p>
+    </section>
+    <section>
+      <h1>8. Conclusões</h1>
+      <p>Este trabalho nos mostrou como realmente funcionam duas partes muito importantes nos compiladores, que são a análise léxica e a análise sintática. Nos mostrou ainda que essas duas partes andam muito juntas e são dependentes uma da outra, dessa forma, quando uma delas possui algum tipo de erro, é bem provável que a outra, por mais que pareça estar certa, não vai funcionar corretamente.</p>
+    </section>
+  </article>
+</body>
+</html>
