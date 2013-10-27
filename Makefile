@@ -48,9 +48,7 @@ flex:
 
 clean:
 	rm -rf $(PATH_DIST)
-	mkdir dist;\
-	cd dist;\
-	touch empty
+	mkdir dist
 
 test: all
 	cd $(PATH_TESTS);\
