@@ -158,7 +158,7 @@ Mulop        : '*'
 %%
 
   private Yylex lexer;
-
+  private static Symbol universe;
 
   private int yylex () {
     int yyl_return = -1;
@@ -189,6 +189,8 @@ Mulop        : '*'
 
   public static void main(String args[]) throws IOException {
     System.out.println("");
+    universe = new Symbol();
+    universe.addBasicTypes();
 
     Parser yyparser;
     if ( args.length > 0 ) {
