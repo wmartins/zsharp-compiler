@@ -19,7 +19,7 @@
 %left ADDITIVESUM ADDITIVESUB LOGICALAND LOGICALOR
 %nonassoc EQEQ DIF GT GTE LT LTE
 
-%type <sval> IDENT, Type, Designator
+%type <sval> IDENT, Type, Designator, NUMBER
 
 %%
 
@@ -31,8 +31,18 @@ ListDecl   : ConstDecl ListDecl
 	   | ClassDecl ListDecl
 	   |;
 	
-ConstDecl  : CONST Type IDENT '=' NUMBER ';' { currentScope.addConst($2, $3); }
-	   | CONST Type IDENT '=' CHARCONST';' { currentScope.addConst($2, $3); }
+ConstDecl  : CONST Type IDENT '=' NUMBER ';' {
+              String type = "int";
+              if($5.contains(".")) { // double
+                if(!$2.equals("double")) {
+                  System.out.println("Tipos incompatíveis: " + $2 + " e double");
+                } else {
+                  type = "double";
+                }
+              }
+              currentScope.addConst(type, $3);
+            }
+	   | CONST Type IDENT '=' CHARCONST';'
 	   ;
 
 VarDecl    : Type IDENT { currentScope.addLocal($1, $2); currentType = $1; } ListIDENT ';';

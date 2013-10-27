@@ -112,6 +112,6 @@ public int getColumn() {
 
 "'"[ -~]+"'"				{ return Parser.CHARCONST; }
 [a-zA-Z][a-zA-Z0-9_]*		{ yyparser.yylval = new ParserVal(yytext()); return Parser.IDENT; }
-[0-9]+				{ return Parser.NUMBER; }
+[0-9]+(\.[0-9]+)?				{ yyparser.yylval = new ParserVal(yytext()); return Parser.NUMBER; }
 
 . { System.out.println(yyline + 1 + ": invalid character: " + yytext()); }
