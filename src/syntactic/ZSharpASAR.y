@@ -16,7 +16,7 @@
 
 %token EQEQ DIF GT GTE LT LTE IF BREAK CONST ELSE CLASS NEW READ WRITE VOID WHILE RETURN IDENT NUMBER ADDITIVESUM ADDITIVESUB LOGICALAND LOGICALOR CHARCONST
 
-%type <sval> IDENT, Type
+%type <sval> IDENT, Type, Designator
 
 %%
 
@@ -61,7 +61,7 @@ Type       : IDENT
            | IDENT '[' ']'
            ;
 
-Statment   : Designator '=' Expr ';'
+Statment   : Designator { if(currentScope.findLocal($1) == null && currentScope.parent.findLocal($1) == null) { System.out.println("Variável " + $1 + " não declarada"); } } '=' Expr ';'
 	   | Designator '(' ')' ';' 
 	   | Designator '(' ActPars ')' ';' 
 	   | Designator ADDITIVESUM ';'
@@ -135,7 +135,7 @@ Factor       : Designator
              | '(' Expr ')'
              ;
 
-Designator   : IDENT ListIdentExpr
+Designator   : IDENT {$$ = $1;} ListIdentExpr
              ;
              
 ListIdentExpr: '.' IDENT ListIdentExpr

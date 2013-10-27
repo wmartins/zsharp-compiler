@@ -23,6 +23,10 @@ public class Symbol {
 		locals = new HashMap<String,Symbol>();
 	}
 
+	public Symbol findLocal(String name) {
+		return locals.get(translateName(Kinds.Local, name));
+	}
+
 	public Symbol addType(String name) {
 		Symbol s = new Symbol();
 		s.name = name;
