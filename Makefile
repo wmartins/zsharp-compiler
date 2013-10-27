@@ -19,14 +19,19 @@ BYACCJ = $(PATH_BIN)/yacc.linux -tv -J
 
 # Make rules
 
-all: permission clean copy flex syntactic_compile flex_compile
+all: permission clean copy semantic_compile flex syntactic_compile flex_compile
 
 permission:
 	cd $(PATH_BIN);\
 	chmod +x yacc.linux
 copy:
+	cp $(PATH_SRC)/semantic/Symbol.java $(PATH_DIST)
 	cp $(PATH_SRC)/lexical/zsharp.flex $(PATH_DIST)
 	cp $(PATH_SRC)/syntactic/ZSharpASAR.y $(PATH_DIST)
+
+semantic_compile:
+	cd $(PATH_DIST);\
+	javac Symbol.java
 
 syntactic_compile:
 	cd $(PATH_DIST);\
