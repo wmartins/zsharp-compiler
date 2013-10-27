@@ -33,10 +33,20 @@ public class Symbol {
 		return s;
 	}
 
-	public Symbol addLocal(String type, String name) {
+	public Symbol addMethod(String type, String name) {
 		Symbol s = new Symbol();
 		s.name = name;
 		s.kind = Kinds.Meth;
+		s.type = type;
+
+		locals.put(name, s);
+		return s;
+	}
+
+	public Symbol addLocal(String type, String name) {
+		Symbol s = new Symbol();
+		s.name = name;
+		s.kind = Kinds.Local;
 		s.type = type;
 
 		locals.put(name, s);

@@ -32,7 +32,7 @@ ConstDecl  : CONST Type IDENT '=' NUMBER ';'
 	   | CONST Type IDENT '=' CHARCONST';'
 	   ;
 
-VarDecl    : Type IDENT { currentScope.addLocal($1, $2); currentType = $1; System.out.println(currentScope.name + " - " + $2); } ListIDENT ';';
+VarDecl    : Type IDENT { currentScope.addLocal($1, $2); currentType = $1; } ListIDENT ';';
 
 ListIDENT  : ',' IDENT { currentScope.addLocal(currentType, $2); } ListIDENT
 	   |
@@ -43,10 +43,10 @@ ClassDecl  : CLASS IDENT { pushScope(currentScope.addType($2)); } '{' ListVarDec
 ListVarDecl: VarDecl ListVarDecl
            | 
            ;
-MethodDecl : Type IDENT '(' { pushScope(currentScope.addLocal($1, $2)); } ')' ListVarDecl Block
-           | VOID IDENT '(' { pushScope(currentScope.addLocal("void", $2)); } ')' ListVarDecl Block
-           | Type IDENT '(' { pushScope(currentScope.addLocal($1, $2)); } FormPars ')' ListVarDecl Block
-           | VOID IDENT '(' { pushScope(currentScope.addLocal("void", $2)); } FormPars ')' ListVarDecl Block
+MethodDecl : Type IDENT '(' { pushScope(currentScope.addMethod($1, $2)); } ')' ListVarDecl Block
+           | VOID IDENT '(' { pushScope(currentScope.addMethod("void", $2)); } ')' ListVarDecl Block
+           | Type IDENT '(' { pushScope(currentScope.addMethod($1, $2)); } FormPars ')' ListVarDecl Block
+           | VOID IDENT '(' { pushScope(currentScope.addMethod("void", $2)); } FormPars ')' ListVarDecl Block
            ;
 ListMethodsDecl: MethodDecl { popScope(currentScope); } ListMethodsDecl 
            | 
@@ -190,13 +190,13 @@ Mulop        : '*'
 
   public void showSymbols(Symbol s, int level) {
     for(int i = 0; i < level; i += 1) {
-      System.out.print(" ");
+      System.out.print("..");
     }
     System.out.println("[" + s.name + "]");
     Iterator it = s.locals.entrySet().iterator();
     while(it.hasNext()) {
       for(int i = 0; i < level + 1; i += 1) {
-        System.out.print(" ");
+        System.out.print("..");
       }
       Map.Entry pairs = (Map.Entry) it.next();
       System.out.println(pairs.getKey() + " - " + ((Symbol)pairs.getValue()).name);
