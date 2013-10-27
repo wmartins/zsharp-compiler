@@ -76,6 +76,21 @@ public class Symbol {
 		return s;
 	}
 
+	public Symbol addConst(String type, String name) {
+		String newName = translateName(Kinds.Local, name);
+		if(locals.get(newName) != null) {
+			System.out.println("Constante já declarada :/");
+		}
+		
+		Symbol s = new Symbol();
+		s.name = newName;
+		s.kind = Kinds.Const;
+		s.type = type;
+
+		locals.put(newName, s);
+		return s;
+	}
+
 	public void addBasicTypes() {
 		addType("int");
 		addType("char");

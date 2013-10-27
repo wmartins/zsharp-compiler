@@ -31,8 +31,8 @@ ListDecl   : ConstDecl ListDecl
 	   | ClassDecl ListDecl
 	   |;
 	
-ConstDecl  : CONST Type IDENT '=' NUMBER ';'
-	   | CONST Type IDENT '=' CHARCONST';'
+ConstDecl  : CONST Type IDENT '=' NUMBER ';' { currentScope.addConst($2, $3); }
+	   | CONST Type IDENT '=' CHARCONST';' { currentScope.addConst($2, $3); }
 	   ;
 
 VarDecl    : Type IDENT { currentScope.addLocal($1, $2); currentType = $1; } ListIDENT ';';
@@ -64,7 +64,17 @@ Type       : IDENT
            | IDENT '[' ']'
            ;
 
-Statment   : Designator { if(currentScope.findLocal($1) == null && currentScope.parent.findLocal($1) == null) { System.out.println("Variável " + $1 + " não declarada"); } } '=' Expr ';'
+Statment   : Designator { 
+              Symbol s = currentScope.findLocal($1);
+              if(s == null) {
+                s = currentScope.parent.findLocal($1);
+              } 
+              if(s == null) {
+                System.out.println("Variável " + $1 + " não declarada");
+              } else if(s.kind == Symbol.Kinds.Const) {
+                System.out.println("Você não pode atribuir valores para uma constante :("); 
+              } 
+            } '=' Expr ';'
 	   | Designator '(' ')' ';' 
 	   | Designator '(' ActPars ')' ';' 
 	   | Designator ADDITIVESUM ';'
