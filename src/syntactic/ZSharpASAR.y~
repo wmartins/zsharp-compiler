@@ -16,9 +16,6 @@
 
 %token EQEQ DIF GT GTE LT LTE IF BREAK CONST ELSE CLASS NEW READ WRITE VOID WHILE RETURN IDENT NUMBER ADDITIVESUM ADDITIVESUB LOGICALAND LOGICALOR CHARCONST
 
-%left ADDITIVESUM ADDITIVESUB LOGICALAND LOGICALOR
-%nonassoc EQEQ DIF GT GTE LT LTE
-
 %type <sval> IDENT, Type
 
 %%
@@ -103,7 +100,7 @@ ListCondTerm : LOGICALOR CondTerm ListCondTerm
              |
              ;
             
-CondTerm     : CondFact ListCondFact                    
+CondTerm     : CondFact ListCondFact
              ;
              
 ListCondFact : LOGICALAND CondFact
