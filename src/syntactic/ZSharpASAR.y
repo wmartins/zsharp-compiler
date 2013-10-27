@@ -42,7 +42,7 @@ ConstDecl  : CONST Type IDENT '=' NUMBER ';' {
               }
               currentScope.addConst(type, $3);
             }
-	   | CONST Type IDENT '=' CHARCONST';'
+	   | CONST Type IDENT '=' CHARCONST';' { currentScope.addConst($2, $3); }
 	   ;
 
 VarDecl    : Type IDENT { currentScope.addLocal($1, $2); currentType = $1; } ListIDENT ';';
