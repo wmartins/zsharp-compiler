@@ -87,8 +87,28 @@ Statment   : Designator {
             } '=' Expr ';'
 	   | Designator '(' ')' ';' 
 	   | Designator '(' ActPars ')' ';' 
-	   | Designator ADDITIVESUM ';'
-	   | Designator ADDITIVESUB ';'
+	   | Designator{ 
+              Symbol s = currentScope.findLocal($1);
+              if(s == null) {
+                s = currentScope.parent.findLocal($1);
+              } 
+              if(s == null) {
+                System.out.println("Variável " + $1 + " não declarada");
+              } else if(s.kind == Symbol.Kinds.Const) {
+                System.out.println("Você não pode alterar o valor de uma constante :("); 
+              } 
+            } ADDITIVESUM ';'
+	   | Designator{ 
+              Symbol s = currentScope.findLocal($1);
+              if(s == null) {
+                s = currentScope.parent.findLocal($1);
+              } 
+              if(s == null) {
+                System.out.println("Variável " + $1 + " não declarada");
+              } else if(s.kind == Symbol.Kinds.Const) {
+                System.out.println("Você não pode alterar o valor de uma constante :("); 
+              } 
+            } ADDITIVESUB ';'
 	   | IF '(' Condition ')' Statment 
 	   | IF '(' Condition ')' Statment ELSE Statment
 	   | WHILE '(' Condition ')' Statment 
