@@ -13,9 +13,11 @@
 
 %token EQEQ DIF GT GTE LT LTE IF BREAK CONST ELSE CLASS NEW READ WRITE VOID WHILE RETURN IDENT NUMBER ADDITIVESUM ADDITIVESUB LOGICALAND LOGICALOR CHARCONST
 
+%type <sval> IDENT, Type
+
 %%
 
-Program    : CLASS IDENT ListDecl '{' ListMethodsDecl '}'
+Program    : CLASS IDENT { pushScope(currentScope.addClass($2)); } ListDecl '{' ListMethodsDecl '}' { universe.describe(); }
            ;
 
 ListDecl   : ConstDecl ListDecl
@@ -23,17 +25,24 @@ ListDecl   : ConstDecl ListDecl
 	   | ClassDecl ListDecl
 	   |;
 	
-ConstDecl  : CONST Type IDENT '=' NUMBER ';'
-	   | CONST Type IDENT '=' CHARCONST';'
+ConstDecl  : CONST Type IDENT '=' NUMBER ';' { currentScope.addConstant($3, getType($2)); }
+	   | CONST Type IDENT '=' CHARCONST';'  { currentScope.addConstant($3, getType($2)); }
 	   ;
 
-VarDecl    : Type IDENT ListIDENT ';';
+VarDecl    : Type IDENT {
+              Symbol type = getType($1);
+              currentScope.addVariable($2, type);
+              currentTypeVarDecl = type;
+            } ListIDENT ';';
 
-ListIDENT  : ',' IDENT ListIDENT
+ListIDENT  : ',' IDENT { currentScope.addVariable($2, currentTypeVarDecl); } ListIDENT
 	   |
 	   ;
 
-ClassDecl  : CLASS IDENT '{' ListVarDecl '}';
+ClassDecl  : CLASS IDENT {
+              Symbol parentScope = pushScope(currentScope.addClass($2));
+              currentScope.parent = parentScope;
+            } '{' ListVarDecl '}' { popScope(currentScope); };
 
 ListVarDecl: VarDecl ListVarDecl
            | 
@@ -158,7 +167,26 @@ Mulop        : '*'
 %%
 
   private Yylex lexer;
+  private static Symbol universe, currentScope, currentTypeVarDecl;
 
+  private Symbol pushScope(Symbol s) {
+    Symbol oldCurrentScope = currentScope;
+    currentScope = s;
+    return oldCurrentScope;
+  }
+
+  private Symbol popScope(Symbol s) {
+    currentScope = s.parent;
+    return s;
+  }
+
+  private Symbol getType(String s) {
+    Symbol type = universe.getType(s);
+    if(type == null) {
+      type = currentScope.getType(s);
+    }
+    return type;
+  }
 
   private int yylex () {
     int yyl_return = -1;
@@ -188,6 +216,10 @@ Mulop        : '*'
   static boolean interactive;
 
   public static void main(String args[]) throws IOException {
+
+    universe = new Symbol(true);
+    currentScope = universe;
+
     System.out.println("");
 
     Parser yyparser;
