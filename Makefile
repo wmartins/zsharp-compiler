@@ -28,10 +28,11 @@ copy:
 	cp $(PATH_SRC)/lexical/zsharp.flex $(PATH_DIST)
 	cp $(PATH_SRC)/syntactic/ZSharpASAR.y $(PATH_DIST)
 	cp $(PATH_SRC)/semantic/Symbol.java $(PATH_DIST)
+	cp $(PATH_SRC)/semantic/StackStack.java $(PATH_DIST)
 
 semantic_compile:
 	cd $(PATH_DIST);\
-	javac Symbol.java
+	javac Symbol.java StackStack.java
 
 syntactic_compile:
 	cd $(PATH_DIST);\

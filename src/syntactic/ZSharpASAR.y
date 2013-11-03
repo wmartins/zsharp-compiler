@@ -9,25 +9,42 @@
    * @author William Henrihque Martins - 12104965-4 - <william.henrihque@acad.pucrs.br>
    */
   import java.io.*;
+  import java.util.Stack;
 %}
 
-%token EQEQ DIF GT GTE LT LTE IF BREAK CONST ELSE CLASS NEW READ WRITE VOID WHILE RETURN IDENT NUMBER ADDITIVESUM ADDITIVESUB LOGICALAND LOGICALOR CHARCONST
+%token EQEQ DIF GT GTE LT LTE 
+%token ADDITIVESUM ADDITIVESUB LOGICALAND LOGICALOR CHARCONST
+%token IF BREAK CONST ELSE CLASS NEW READ WRITE VOID WHILE RETURN
+%token IDENT NUMBER 
 
-%type <sval> IDENT, Type
+%left LOGICALOR
+%left LOGICALAND
+%nonassoc  GTE EQEQ DIF LTE  '>' '<'
+%left '+' '-'
+%left '*' '/' '%'  
+%left NEG 
+
+%type <sval> IDENT Type
 
 %%
 
-Program    : CLASS IDENT { pushScope(currentScope.addClass($2)); } ListDecl '{' ListMethodsDecl '}' { universe.describe(); }
+Program    : CLASS IDENT { pushScope(currentScope.addClass($2)); programScope = currentScope; } ListDecl '{' ListMethodsDecl '}' { universe.describe(); }
            ;
 
 ListDecl   : ConstDecl ListDecl
-	   | VarDecl ListDecl
-	   | ClassDecl ListDecl
-	   |;
-	
-ConstDecl  : CONST Type IDENT '=' NUMBER ';' { currentScope.addConstant($3, getType($2)); }
-	   | CONST Type IDENT '=' CHARCONST';'  { currentScope.addConstant($3, getType($2)); }
-	   ;
+     | VarDecl ListDecl
+     | ClassDecl ListDecl
+     |;
+  
+ConstDecl  : CONST Type IDENT '=' NUMBER ';' {
+              Symbol type = getType($2);
+              currentScope.addConstant($3, type);
+            }
+     | CONST Type IDENT '=' CHARCONST';' {
+            Symbol type = getType($2);
+            currentScope.addConstant($3, type); 
+          }
+     ;
 
 VarDecl    : Type IDENT {
               Symbol type = getType($1);
@@ -36,52 +53,64 @@ VarDecl    : Type IDENT {
             } ListIDENT ';';
 
 ListIDENT  : ',' IDENT { currentScope.addVariable($2, currentTypeVarDecl); } ListIDENT
-	   |
-	   ;
+     |
+     ;
 
 ClassDecl  : CLASS IDENT {
-              Symbol parentScope = pushScope(currentScope.addClass($2));
-              currentScope.parent = parentScope;
-            } '{' ListVarDecl '}' { popScope(currentScope); };
+              pushScope(currentScope.addClass($2));
+            } '{' ListVarDecl '}';
 
 ListVarDecl: VarDecl ListVarDecl
            | 
            ;
 MethodDecl : Type IDENT '(' ')' ListVarDecl Block
            | VOID IDENT '(' ')' ListVarDecl Block
-           | Type IDENT '(' FormPars ')' ListVarDecl Block
-           | VOID IDENT '(' FormPars ')' ListVarDecl Block
+           | Type IDENT '(' { pushScope(currentScope.addMethod($2, getType($1))); } FormPars ')' ListVarDecl Block { popScope(currentScope); }
+           | VOID IDENT '(' { pushScope(currentScope.addMethod($2, getType("void"))); } FormPars ')' ListVarDecl Block { popScope(currentScope); }
            ;
 ListMethodsDecl: MethodDecl ListMethodsDecl 
            | 
-	   ;
+     ;
 
-FormPars   : Type IDENT
-           | Type IDENT ',' FormPars
+FormPars   : Type IDENT {
+              currentScope.addVariable($2, getType($1));
+            }
+           | Type IDENT {
+              currentScope.addVariable($2, getType($1));
+           }',' FormPars
            ;
 
 
 Type       : IDENT 
-           | IDENT '[' ']'
+           | IDENT { 
+              Symbol type = getType($1);
+              if(type == null) {
+                System.out.println("Error: " + $1 + " must be a type");
+              }
+            }'[' ']'
            ;
 
-Statment   : Designator '=' Expr ';'
-	   | Designator '(' ')' ';' 
-	   | Designator '(' ActPars ')' ';' 
-	   | Designator ADDITIVESUM ';'
-	   | Designator ADDITIVESUB ';'
-	   | IF '(' Condition ')' Statment 
-	   | IF '(' Condition ')' Statment ELSE Statment
-	   | WHILE '(' Condition ')' Statment 
-           | BREAK ';'
-	   | RETURN Expr ';'
-	   | RETURN ';'
-	   | READ  '(' Designator ')' ';'
-	   | WRITE '(' Expr ')' ';'
-	   | WRITE '(' Expr ',' NUMBER  ')' ';'
-	   | Block
-	   | ';' 
-	   ;
+Statment   : Designator '=' { resolveDesignator("variable"); } Expr ';'
+     | Designator '(' { resolveDesignator("method"); } ')' ';' 
+     | Designator '(' { resolveDesignator("method"); } ActPars ')' ';' 
+     | Designator { resolveDesignator("variable"); } ADDITIVESUM ';'
+     | Designator { resolveDesignator("variable"); } ADDITIVESUB ';'
+     | IF '(' Expr ')' Statment 
+     | IF '(' Expr ')' Statment ELSE Statment
+     | WHILE '(' Expr ')' { insideWhileLoop = true; } Statment { insideWhileLoop = false; } 
+     | BREAK {
+        if(!insideWhileLoop) {
+          System.out.println("Break command must be inside while loop");
+        }
+      } ';'
+     | RETURN Expr ';'
+     | RETURN ';'
+     | READ  '(' Designator { resolveDesignator("variable"); } ')' ';'
+     | WRITE '(' Expr ')' ';'
+     | WRITE '(' Expr ',' NUMBER  ')' ';'
+     | Block
+     | ';' 
+     ;
 
 ListStatment : Statment ListStatment
              |
@@ -96,42 +125,24 @@ ActPars      : Expr ListExpr
 ListExpr     : ',' Expr ListExpr
              |
              ;
-             
-Condition    : CondTerm ListCondTerm
-             ;
-             
-ListCondTerm : LOGICALOR CondTerm ListCondTerm
-             |
-             ;
-            
-CondTerm     : CondFact ListCondFact                    
-             ;
-             
-ListCondFact : LOGICALAND CondFact
-             |
-             ;
-             
-CondFact     : Expr Relop Expr
-             ;
-           
-Expr         :'-' Term ListAddopTerm
-             |Term ListAddopTerm
-             ;
-   
-ListAddopTerm:Addop Term ListAddopTerm
-             |
-             ;
 
-Term         :Factor ListMulopFactor
-             ;
-
-ListMulopFactor : Mulop Factor ListMulopFactor
-                |
-                ;
-             
-Factor       : Designator
-             | Designator '(' ')'
-             | Designator '(' ActPars ')'
+Expr         : Expr LOGICALOR Expr 
+             | Expr  LOGICALAND Expr  
+             | Expr  GTE  Expr 
+             | Expr  EQEQ Expr 
+             | Expr  DIF  Expr 
+             | Expr  LTE  Expr 
+             | Expr  '>'  Expr 
+             | Expr  '<'  Expr 
+             | Expr  '+'  Expr 
+             | Expr  '-'  Expr 
+             | '-' Expr  %prec NEG
+             | Expr  '*'  Expr 
+             | Expr  '/'  Expr 
+             | Expr  '%'  Expr 
+             | Designator { resolveDesignator("variable"); }
+             | Designator '(' ')' { resolveDesignator("method"); }
+             | Designator '(' { resolveDesignator("method"); } ActPars ')'
              | NUMBER
              | CHARCONST
              | NEW IDENT
@@ -139,39 +150,26 @@ Factor       : Designator
              | '(' Expr ')'
              ;
 
-Designator   : IDENT ListIdentExpr
+Designator   : IDENT { designatorStack.begin(); designatorStack.push($1); } ListIdentExpr
              ;
              
-ListIdentExpr: '.' IDENT ListIdentExpr
+ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
              | '[' Expr ']' ListIdentExpr
              |
              ;
-             
-Relop        : GTE
-             | EQEQ
-             | DIF
-             | LTE
-             | '>'
-             | '<'
-             ;           
-
-Addop        : '+'
-             | '-'
-             ;           
-
-Mulop        : '*'
-             | '/'
-             | '%'
-             ;   
+     
 
 %%
 
   private Yylex lexer;
-  private static Symbol universe, currentScope, currentTypeVarDecl;
+  private static Symbol universe, currentScope, programScope, currentTypeVarDecl;
+  private static StackStack<String> designatorStack;
+  private static boolean insideWhileLoop;
 
   private Symbol pushScope(Symbol s) {
     Symbol oldCurrentScope = currentScope;
     currentScope = s;
+    currentScope.parent = oldCurrentScope;
     return oldCurrentScope;
   }
 
@@ -181,11 +179,78 @@ Mulop        : '*'
   }
 
   private Symbol getType(String s) {
-    Symbol type = universe.getType(s);
+    Symbol type = currentScope.getType(s);
     if(type == null) {
-      type = currentScope.getType(s);
+      type = programScope.getType(s);
+    }
+    if(type == null) {
+      type = universe.getType(s);
     }
     return type;
+  }
+
+  private Symbol getMethod(String s) {
+    Symbol method = currentScope.getMethod(s);
+    if(method == null) {
+      method = programScope.getMethod(s);
+    }
+    if(method == null) {
+      method = universe.getMethod(s);
+    }
+    return method;
+  }
+
+  private Symbol getVariable(String s) {
+    Symbol variable = currentScope.getVariable(s);
+    if(variable == null) {
+      variable = programScope.getVariable(s);
+    }
+    if(variable == null) {
+      variable = universe.getVariable(s);
+    }
+    return variable;
+  }
+
+  private Symbol resolveDesignator(String resolveType) {
+    int size = designatorStack.size();
+    String el;
+    Symbol r = null, scope = null, type = null, variable = null;
+    Stack<String> reverseStack = new Stack<String>();
+
+    if(size == 1) {
+      el = designatorStack.pop();
+      if(resolveType.equals("variable")) {
+        r = getVariable(el);
+      } else if(resolveType.equals("method")) {
+        r = getMethod(el);
+      }
+    } else {
+      while(size > 0) {
+        reverseStack.push(designatorStack.pop());
+        size -= 1;
+      }
+      while(!reverseStack.empty()) {
+        if(resolveType.equals("variable")) {
+          el = reverseStack.pop();
+          if(type != null) {
+            variable = type.getVariable(el);
+            if(variable == null) {
+              System.out.println(el + " is not a property of " + type.name);
+            } else {
+              type = variable.type;
+            }
+          } else {
+            variable = getVariable(el);
+            if(variable != null) {
+              type = variable.type;
+            }
+          }
+        }
+      }
+    }
+    designatorStack.end();
+
+    return r;
   }
 
   private int yylex () {
@@ -219,6 +284,8 @@ Mulop        : '*'
 
     universe = new Symbol(true);
     currentScope = universe;
+    insideWhileLoop = false;
+    designatorStack = new StackStack<String>();
 
     System.out.println("");
 
@@ -234,13 +301,12 @@ Mulop        : '*'
       System.out.println("[Quit with CTRL-D]");
       System.out.print("> ");
       interactive = true;
-	    yyparser = new Parser(new InputStreamReader(System.in));
+      yyparser = new Parser(new InputStreamReader(System.in));
     }
 
     yyparser.yyparse();
     
     if (interactive) {
-      System.out.print("done!");
+      System.out.print("\ndone!");
     }
   }
-
