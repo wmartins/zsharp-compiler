@@ -111,7 +111,12 @@ Statment   : Designator '=' { resolveDesignator("variable"); } Expr ';'
             System.out.println("Increment operator must be a variable, object field or array, " + s.name + " isn't any of that.");
           }
       } ADDITIVESUM ';'
-     | Designator { resolveDesignator("variable"); } ADDITIVESUB ';'
+     | Designator {
+        Symbol s = resolveDesignator("variable");
+        if(!s.kinds.contains(Symbol.Kind.Variable)) {
+          System.out.println("Decrement operator must be a variable, object field or array, " + s.name + " isn't any of that.");
+        }
+      } ADDITIVESUB ';'
      | IF '(' Expr ')' Statment 
      | IF '(' Expr ')' Statment ELSE Statment
      | WHILE '(' Expr ')' { insideWhileLoop = true; } Statment { insideWhileLoop = false; } 
