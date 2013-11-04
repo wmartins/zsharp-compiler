@@ -48,23 +48,35 @@ ConstDecl  : CONST Type IDENT '=' NUMBER ';' {
 
 VarDecl    : Type IDENT {
               Symbol type = getType($1);
-              currentScope.addVariable($2, type);
+              Symbol variable = currentScope.addVariable($2, type);
               currentTypeVarDecl = type;
+
+              if(insideClassDecl) {
+                variable.kinds.add(Symbol.Kind.Field);
+              }
+              variable.kinds.add(Symbol.Kind.Variable);
             } ListIDENT ';';
 
-ListIDENT  : ',' IDENT { currentScope.addVariable($2, currentTypeVarDecl); } ListIDENT
+ListIDENT  : ',' IDENT {
+                  Symbol variable = currentScope.addVariable($2, currentTypeVarDecl);
+
+                  if(insideClassDecl) {
+                    variable.kinds.add(Symbol.Kind.Field);
+                  }
+                  variable.kinds.add(Symbol.Kind.Variable);
+                } ListIDENT
      |
      ;
 
 ClassDecl  : CLASS IDENT {
-              pushScope(currentScope.addClass($2));
-            } '{' ListVarDecl '}';
+              insideClassDecl = true; pushScope(currentScope.addClass($2));
+            } '{' ListVarDecl '}' { insideClassDecl = false; popScope(currentScope); };
 
 ListVarDecl: VarDecl ListVarDecl
            | 
            ;
-MethodDecl : Type IDENT '(' ')' ListVarDecl Block
-           | VOID IDENT '(' ')' ListVarDecl Block
+MethodDecl : Type IDENT '(' { pushScope(currentScope.addMethod($2, getType($1))); } ')' ListVarDecl Block { popScope(currentScope); }
+           | VOID IDENT '(' { pushScope(currentScope.addMethod($2, getType("void"))); } ')' ListVarDecl Block { popScope(currentScope); }
            | Type IDENT '(' { pushScope(currentScope.addMethod($2, getType($1))); } FormPars ')' ListVarDecl Block { popScope(currentScope); }
            | VOID IDENT '(' { pushScope(currentScope.addMethod($2, getType("void"))); } FormPars ')' ListVarDecl Block { popScope(currentScope); }
            ;
@@ -93,7 +105,12 @@ Type       : IDENT
 Statment   : Designator '=' { resolveDesignator("variable"); } Expr ';'
      | Designator '(' { resolveDesignator("method"); } ')' ';' 
      | Designator '(' { resolveDesignator("method"); } ActPars ')' ';' 
-     | Designator { resolveDesignator("variable"); } ADDITIVESUM ';'
+     | Designator {
+          Symbol s = resolveDesignator("variable");
+          if(!s.kinds.contains(Symbol.Kind.Variable)) {
+            System.out.println("Increment operator must be a variable, object field or array, " + s.name + " isn't any of that.");
+          }
+      } ADDITIVESUM ';'
      | Designator { resolveDesignator("variable"); } ADDITIVESUB ';'
      | IF '(' Expr ')' Statment 
      | IF '(' Expr ')' Statment ELSE Statment
@@ -164,7 +181,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
   private Yylex lexer;
   private static Symbol universe, currentScope, programScope, currentTypeVarDecl;
   private static StackStack<String> designatorStack;
-  private static boolean insideWhileLoop;
+  private static boolean insideWhileLoop, insideClassDecl;
 
   private Symbol pushScope(Symbol s) {
     Symbol oldCurrentScope = currentScope;
@@ -211,6 +228,17 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
     return variable;
   }
 
+  private Symbol getConstant(String s) {
+    Symbol constant = currentScope.getConstant(s);
+    if(constant == null) {
+      constant = programScope.getConstant(s);
+    }
+    if(constant == null) {
+      constant = universe.getConstant(s);
+    }
+    return constant;
+  }
+
   private Symbol resolveDesignator(String resolveType) {
     int size = designatorStack.size();
     String el;
@@ -223,6 +251,9 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
         r = getVariable(el);
       } else if(resolveType.equals("method")) {
         r = getMethod(el);
+      } 
+      if(r == null) {
+        r = getConstant(el);
       }
     } else {
       while(size > 0) {
@@ -233,7 +264,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
         if(resolveType.equals("variable")) {
           el = reverseStack.pop();
           if(type != null) {
-            variable = type.getVariable(el);
+            r = variable = type.getVariable(el);
             if(variable == null) {
               System.out.println(el + " is not a property of " + type.name);
             } else {

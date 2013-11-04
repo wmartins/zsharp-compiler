@@ -9,6 +9,7 @@ public class Symbol {
 		Class
 		, Array // anything that has some kind of index
 		, Field // an class object, maybe it could also be a method of a class
+		, Variable // well, you know, variables :)
 	}
 
 	public Symbol parent;
@@ -44,6 +45,10 @@ public class Symbol {
 			Symbol voidSymbol = new Symbol();
 			voidSymbol.name = "void";
 			types.put("void", voidSymbol);
+
+			Symbol nullSymbol = new Symbol();
+			nullSymbol.name = "null";
+			constants.put("null", nullSymbol);
 		}
 	}
 
@@ -97,6 +102,10 @@ public class Symbol {
 
 	public Symbol getMethod(String name) {
 		return methods.get(name);
+	}
+
+	public Symbol getConstant(String name) {
+		return constants.get(name);
 	}
 
 	public Symbol getSymbol(String name) {
