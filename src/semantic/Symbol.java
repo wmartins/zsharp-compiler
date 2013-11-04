@@ -1,24 +1,28 @@
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.HashSet;
 
 public class Symbol {
 
 	public enum Kind {
 		Class
+		, Array // anything that has some kind of index
+		, Field // an class object, maybe it could also be a method of a class
 	}
 
 	public Symbol parent;
 
 	public String name;
 	public Symbol type;
-	public Kind kind;
+	public HashSet<Kind> kinds;
 	public HashMap<String,Symbol> types;
 	public HashMap<String,Symbol> variables;
 	public HashMap<String,Symbol> constants;
 	public HashMap<String,Symbol> methods;
 
 	public void construct() {
+		kinds = new HashSet<Kind>();
 		types = new HashMap<String,Symbol>();
 		variables = new HashMap<String,Symbol>();
 		constants = new HashMap<String,Symbol>();
@@ -50,7 +54,7 @@ public class Symbol {
 	public Symbol addClass(String name) {
 		Symbol s = new Symbol();
 		s.name = name;
-		s.kind = Kind.Class;
+		kinds.add(Kind.Class);
 
 		types.put(name, s);
 		return s;
