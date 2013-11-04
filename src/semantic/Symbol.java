@@ -10,6 +10,7 @@ public class Symbol {
 		, Array // anything that has some kind of index
 		, Field // an class object, maybe it could also be a method of a class
 		, Variable // well, you know, variables :)
+		, Type
 	}
 
 	public Symbol parent;
@@ -37,14 +38,22 @@ public class Symbol {
 			Symbol intSymbol = new Symbol();
 			intSymbol.name = "int";
 			types.put("int", intSymbol);
+			intSymbol.kinds.add(Kind.Type);
 
 			Symbol charSymbol = new Symbol();
 			charSymbol.name = "char";
 			types.put("char", charSymbol);
+			charSymbol.kinds.add(Kind.Type);
+
+			Symbol booleanSymbol = new Symbol();
+			booleanSymbol.name = "boolean";
+			types.put("boolean", booleanSymbol);
+			booleanSymbol.kinds.add(Kind.Type);
 
 			Symbol voidSymbol = new Symbol();
 			voidSymbol.name = "void";
 			types.put("void", voidSymbol);
+			voidSymbol.kinds.add(Kind.Type);
 
 			Symbol nullSymbol = new Symbol();
 			nullSymbol.name = "null";

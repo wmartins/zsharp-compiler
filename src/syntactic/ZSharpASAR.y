@@ -25,6 +25,7 @@
 %left NEG 
 
 %type <sval> IDENT Type
+%type <sval> Expr
 
 %%
 
@@ -160,7 +161,26 @@ Expr         : Expr LOGICALOR Expr
              | Expr  EQEQ Expr 
              | Expr  DIF  Expr 
              | Expr  LTE  Expr 
-             | Expr  '>'  Expr 
+             | Expr  '>'  Expr {
+                Symbol _1 = exprStack.pop();
+                Symbol _3 = exprStack.pop();
+                Symbol _1Type, _3Type;
+
+                if(!_1.kinds.contains(Symbol.Kind.Type)) {
+                  _1Type = _1.type;
+                } else {
+                  _1Type = _1;
+                }
+
+                if(!_3.kinds.contains(Symbol.Kind.Type)) {
+                  _3Type = _3.type;
+                } else {
+                  _3Type = _3;
+                }
+                if(_1Type != _3Type) {
+                  System.out.println("Incompatible types for " + _1.name + " and " + _3.name + ".");
+                }
+            }
              | Expr  '<'  Expr 
              | Expr  '+'  Expr 
              | Expr  '-'  Expr 
@@ -168,14 +188,14 @@ Expr         : Expr LOGICALOR Expr
              | Expr  '*'  Expr 
              | Expr  '/'  Expr 
              | Expr  '%'  Expr 
-             | Designator { resolveDesignator("variable"); }
-             | Designator '(' ')' { resolveDesignator("method"); }
-             | Designator '(' { resolveDesignator("method"); } ActPars ')'
-             | NUMBER
-             | CHARCONST
-             | NEW IDENT
-             | NEW IDENT '[' Expr ']'
-             | '(' Expr ')'
+             | Designator { exprStack.push(resolveDesignator("variable")); }
+             | Designator '(' ')' { exprStack.push(resolveDesignator("method")); }
+             | Designator '(' { exprStack.push(resolveDesignator("method")); } ActPars ')'
+             | NUMBER { exprStack.push(getType("int")); /* TODO: */ }
+             | CHARCONST { exprStack.push(getType("int")); /* TODO: */ }
+             | NEW IDENT { exprStack.push(getType("int")); /* TODO: */ }
+             | NEW IDENT '[' Expr ']' { exprStack.push(getType("int")); /* TODO: */ }
+             | '(' Expr ')' { exprStack.push(getType("int")); /* TODO: */ }
              ;
 
 Designator   : IDENT { designatorStack.begin(); designatorStack.push($1); } ListIdentExpr
@@ -193,6 +213,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
   private static Symbol universe, currentScope, programScope, currentTypeVarDecl;
   private static StackStack<String> designatorStack;
   private static boolean insideWhileLoop, insideClassDecl;
+  private static Stack<Symbol> exprStack;
 
   private Symbol pushScope(Symbol s) {
     Symbol oldCurrentScope = currentScope;
@@ -328,6 +349,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
     currentScope = universe;
     insideWhileLoop = false;
     designatorStack = new StackStack<String>();
+    exprStack = new Stack<Symbol>();
 
     System.out.println("");
 
