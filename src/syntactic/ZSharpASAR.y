@@ -110,11 +110,17 @@ Statment   : Designator '=' { resolveDesignator("variable"); } Expr ';'
           if(!s.kinds.contains(Symbol.Kind.Variable)) {
             System.out.println("Increment operator must be a variable, object field or array, " + s.name + " isn't any of that.");
           }
+          if(s.type != getType("int")) {
+            System.out.println("Increment operator must be int, " + s.name + " is " + s.type.name);
+          }
       } ADDITIVESUM ';'
      | Designator {
         Symbol s = resolveDesignator("variable");
         if(!s.kinds.contains(Symbol.Kind.Variable)) {
           System.out.println("Decrement operator must be a variable, object field or array, " + s.name + " isn't any of that.");
+        }
+        if(s.type != getType("int")) {
+          System.out.println("Increment operator must be int, " + s.name + " is " + s.type.name);
         }
       } ADDITIVESUB ';'
      | IF '(' Expr ')' Statment 
