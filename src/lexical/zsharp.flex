@@ -110,7 +110,7 @@ public int getColumn() {
 "while"		 		{ return Parser.WHILE; }
 "return"			{ return Parser.RETURN;}
 
-"'"[ -~]+"'"				{ return Parser.CHARCONST; }
+'[ -&(-~]+'				{ return Parser.CHARCONST; }
 [a-zA-Z][a-zA-Z0-9_]*		{ yyparser.yylval = new ParserVal(yytext()); return Parser.IDENT; }
 [0-9]+				{ return Parser.NUMBER; }
 
