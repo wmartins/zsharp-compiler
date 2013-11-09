@@ -49,7 +49,12 @@ ConstDecl  : CONST Type IDENT '=' NUMBER ';' {
 
 VarDecl    : Type IDENT {
               Symbol type = getType($1);
-              Symbol variable = currentScope.addVariable($2, type);
+              Symbol variable;
+              if(!currentTypeArray) {
+                variable = currentScope.addVariable($2, type);
+              } else {
+                variable = currentScope.addArrayVariable($2, type);
+              }
               currentTypeVarDecl = type;
 
               if(insideClassDecl) {
@@ -86,21 +91,32 @@ ListMethodsDecl: MethodDecl ListMethodsDecl
      ;
 
 FormPars   : Type IDENT {
-              currentScope.addVariable($2, getType($1));
+              if(!currentTypeArray) {
+                currentScope.addVariable($2, getType($1));
+              } else {
+                currentScope.addArrayVariable($2, getType($1));
+              }
             }
            | Type IDENT {
-              currentScope.addVariable($2, getType($1));
+              if(!currentTypeArray) {
+                currentScope.addVariable($2, getType($1));
+              } else {
+                currentScope.addArrayVariable($2, getType($1));
+              }
            }',' FormPars
            ;
 
 
-Type       : IDENT 
-           | IDENT { 
+Type       : IDENT {
+              currentTypeArray = false;
+            }
+           | IDENT '[' ']' {
               Symbol type = getType($1);
               if(type == null) {
                 System.out.println("Error: " + $1 + " must be a type");
               }
-            }'[' ']'
+              currentTypeArray = true;
+            }
            ;
 
 Statment   : Designator '=' {
@@ -284,7 +300,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
   private Yylex lexer;
   private static Symbol universe, currentScope, programScope, currentTypeVarDecl, currentSymbol;
   private static StackStack<String> designatorStack;
-  private static boolean insideWhileLoop, insideClassDecl;
+  private static boolean insideWhileLoop, insideClassDecl, currentTypeArray;
   private static Stack<Symbol> exprStack;
   private static String currentDesignatorName;
 

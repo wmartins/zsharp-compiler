@@ -104,6 +104,12 @@ public class Symbol {
 		return s;
 	}
 
+	public Symbol addArrayVariable(String name, Symbol type) {
+		Symbol s = addVariable(name, type);
+		s.kinds.add(Kind.Array);
+		return s;
+	}
+
 	public Symbol addConstant(String name, Symbol type) {
 		Symbol s = new Symbol();
 		s.name = name;

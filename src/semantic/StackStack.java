@@ -10,6 +10,14 @@ public class StackStack<T> {
 		counterStack = new Stack<Integer>();
 	}
 
+	public T peek() {
+		if(!counterStack.empty()) {
+			return elementsStack.peek();
+		} else {
+			return null;
+		}
+	}
+
 	public void begin() {
 		counterStack.push(0);
 	}
