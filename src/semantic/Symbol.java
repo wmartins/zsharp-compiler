@@ -12,6 +12,7 @@ public class Symbol {
 		, Variable // well, you know, variables :)
 		, Method
 		, Type
+		, Argument
 	}
 
 	public Symbol parent;
@@ -94,6 +95,14 @@ public class Symbol {
 		return s;
 	}
 
+	public Symbol addVariable(String name, Symbol type, boolean argument) {
+		Symbol s = addVariable(name, type);
+		if(argument) {
+			s.kinds.add(Kind.Argument);
+		}
+		return s;
+	}
+
 	public Symbol addVariable(String name, Symbol type) {
 		Symbol s = new Symbol();
 		s.name = name;
@@ -101,6 +110,14 @@ public class Symbol {
 
 		s.kinds.add(Kind.Variable);
 		variables.put(name, s);
+		return s;
+	}
+
+	public Symbol addArrayVariable(String name, Symbol type, boolean argument) {
+		Symbol s = addArrayVariable(name, type);
+		if(argument) {
+			s.kinds.add(Kind.Argument);
+		}
 		return s;
 	}
 
