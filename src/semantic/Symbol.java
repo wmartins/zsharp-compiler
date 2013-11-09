@@ -2,6 +2,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.HashSet;
+import java.util.ArrayList;
 
 public class Symbol {
 
@@ -24,6 +25,7 @@ public class Symbol {
 	public HashMap<String,Symbol> variables;
 	public HashMap<String,Symbol> constants;
 	public HashMap<String,Symbol> methods;
+	public ArrayList<Symbol> arguments;
 
 	public void construct() {
 		kinds = new HashSet<Kind>();
@@ -31,6 +33,7 @@ public class Symbol {
 		variables = new HashMap<String,Symbol>();
 		constants = new HashMap<String,Symbol>();
 		methods = new HashMap<String,Symbol>();
+		arguments = new ArrayList<Symbol>();
 	}
 
 	public Symbol(boolean universe) {
@@ -133,6 +136,12 @@ public class Symbol {
 		s.type = type;
 
 		constants.put(name, s);
+		return s;
+	}
+
+	public Symbol addMethod(String name, Symbol type, ArrayList<Symbol> formPars) {
+		Symbol s = addMethod(name, type);
+		s.arguments = formPars;
 		return s;
 	}
 
