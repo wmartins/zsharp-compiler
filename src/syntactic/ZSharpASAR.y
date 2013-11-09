@@ -105,6 +105,7 @@ Type       : IDENT
 
 Statment   : Designator '=' {
               Symbol s = resolveDesignator("variable");
+              currentSymbol = s;
               if(s != null) {
                 if(!s.kinds.contains(Symbol.Kind.Variable)) {
                   System.out.println("Attributions must have on the left side a variable, object field or array, " + s.name + " isn't any of that.");
@@ -112,6 +113,9 @@ Statment   : Designator '=' {
               }
             } Expr { 
               Symbol type = exprStack.peek();
+              if(currentSymbol.type != type) {
+                System.out.println("Incompatible types for " + currentSymbol.type.name + " and " + type.name + ".");
+              }
             }';'
      | Designator '(' { currentDesignatorName = $1; resolveDesignator("method"); } ')' ';' 
      | Designator '(' { currentDesignatorName = $1; resolveDesignator("method"); } ActPars ')' ';' 
@@ -232,6 +236,8 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
                 if(s != getType("int")) {
                   System.out.println("Arrays of types can only be created with integer sizes " + s.name + " is not an integer type.");
                 }
+                Symbol type = getType($2);
+                exprStack.push(type);
               } ']'
              | '(' Expr ')'
              ;
@@ -248,7 +254,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
 %%
 
   private Yylex lexer;
-  private static Symbol universe, currentScope, programScope, currentTypeVarDecl;
+  private static Symbol universe, currentScope, programScope, currentTypeVarDecl, currentSymbol;
   private static StackStack<String> designatorStack;
   private static boolean insideWhileLoop, insideClassDecl;
   private static Stack<Symbol> exprStack;
