@@ -145,7 +145,13 @@ Statment   : Designator '=' {
           System.out.println("Break command must be inside while loop");
         }
       } ';'
-     | RETURN Expr ';'
+     | RETURN Expr {
+        Symbol s = exprStack.pop();
+
+        if(currentScope.type != s) {
+          System.out.println("This method must return " + currentScope.type.name + ". So, it can't return " + s.name + ".");
+        }
+     }';'
      | RETURN ';' { 
         if(!currentScope.type.name.equals("void")) {
           System.out.println("This method must return " + currentScope.type.name + ". So, it can't return void.");
@@ -165,12 +171,14 @@ Statment   : Designator '=' {
         Symbol type = exprStack.pop();
         if(type != getType("int") && type!= getType("char")) {
           System.out.println("Write operation can only be applied to int or char, " + type.name + " is not any of that.");
-        } } ')' ';'
+        }
+      } ')' ';'
      | WRITE '(' Expr {
         Symbol type = exprStack.pop();
         if(type != getType("int") && type!= getType("char")) {
           System.out.println("Write operation can only be applied to int or char, " + type.name + " is not any of that.");
-        } } ',' NUMBER  ')' ';'
+        }
+      } ',' NUMBER  ')' ';'
      | Block
      | ';' 
      ;
