@@ -10,6 +10,7 @@
    */
   import java.io.*;
   import java.util.Stack;
+  import java.util.ArrayList;
 %}
 
 %token EQEQ DIF GT GTE LT LTE 
@@ -83,25 +84,33 @@ ListVarDecl: VarDecl ListVarDecl
            ;
 MethodDecl : Type IDENT '(' { pushScope(currentScope.addMethod($2, getType($1))); } ')' ListVarDecl Block { popScope(currentScope); }
            | VOID IDENT '(' { pushScope(currentScope.addMethod($2, getType("void"))); } ')' ListVarDecl Block { popScope(currentScope); }
-           | Type IDENT '(' { pushScope(currentScope.addMethod($2, getType($1))); } FormPars ')' ListVarDecl Block { popScope(currentScope); }
-           | VOID IDENT '(' { pushScope(currentScope.addMethod($2, getType("void"))); } FormPars ')' ListVarDecl Block { popScope(currentScope); }
+           | Type IDENT '(' { formPars.clear(); } FormPars {
+              
+              pushScope(currentScope.addMethod($2, getType($1), formPars));
+
+            } ')' ListVarDecl Block { popScope(currentScope); }
+           | VOID IDENT '(' { formPars.clear(); } FormPars {
+              
+              pushScope(currentScope.addMethod($2, getType("void"), formPars));
+
+              } ')' ListVarDecl Block { popScope(currentScope); }
            ;
-ListMethodsDecl: MethodDecl ListMethodsDecl 
+ListMethodsDecl: { methodDeclaration = true; } MethodDecl { methodDeclaration = false; } ListMethodsDecl 
            | 
      ;
 
 FormPars   : Type IDENT {
               if(!currentTypeArray) {
-                currentScope.addVariable($2, getType($1));
+                formPars.add(currentScope.addVariable($2, getType($1)));
               } else {
-                currentScope.addArrayVariable($2, getType($1));
+                formPars.add(currentScope.addArrayVariable($2, getType($1)));
               }
             }
            | Type IDENT {
               if(!currentTypeArray) {
-                currentScope.addVariable($2, getType($1));
+                formPars.add(currentScope.addVariable($2, getType($1)));
               } else {
-                currentScope.addArrayVariable($2, getType($1));
+                formPars.add(currentScope.addArrayVariable($2, getType($1)));
               }
            }',' FormPars
            ;
@@ -300,9 +309,10 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
   private Yylex lexer;
   private static Symbol universe, currentScope, programScope, currentTypeVarDecl, currentSymbol;
   private static StackStack<String> designatorStack;
-  private static boolean insideWhileLoop, insideClassDecl, currentTypeArray;
+  private static boolean insideWhileLoop, insideClassDecl, currentTypeArray, methodDeclaration;
   private static Stack<Symbol> exprStack;
   private static String currentDesignatorName;
+  private static ArrayList<Symbol> formPars;
 
   private Symbol pushScope(Symbol s) {
     Symbol oldCurrentScope = currentScope;
@@ -508,6 +518,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
     insideWhileLoop = false;
     designatorStack = new StackStack<String>();
     exprStack = new Stack<Symbol>();
+    formPars = new ArrayList<Symbol>();
 
     System.out.println("");
 
