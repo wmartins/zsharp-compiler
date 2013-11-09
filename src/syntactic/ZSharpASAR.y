@@ -222,10 +222,15 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
                 }
               } ActPars ')'
              | NUMBER { exprStack.push(getType("int")); /* TODO: */ }
-             | CHARCONST { exprStack.push(getType("int")); /* TODO: */ }
-             | NEW IDENT { exprStack.push(getType("int")); /* TODO: */ }
-             | NEW IDENT '[' Expr ']' { exprStack.push(getType("int")); /* TODO: */ }
-             | '(' Expr ')' { }
+             | CHARCONST { exprStack.push(getType("char")); /* TODO: */ }
+             | NEW IDENT { }
+             | NEW IDENT '[' Expr {
+                Symbol s = exprStack.pop();
+                if(s != getType("int")) {
+                  System.out.println("Arrays of types can only be created with integer sizes " + s.name + " is not an integer type.");
+                }
+              } ']'
+             | '(' Expr { } ')'
              ;
 
 Designator   : IDENT { designatorStack.begin(); designatorStack.push($1); } ListIdentExpr
@@ -364,7 +369,8 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
  * And this is what resolveDesignator does, it manages this resolution algorithm using stacks!
  * Cool right?
  * ---
- 
+ */
+
   private Symbol resolveDesignator(String resolveType) {
     int size = designatorStack.size();
     String el;
