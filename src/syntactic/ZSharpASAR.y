@@ -25,7 +25,7 @@
 %left NEG 
 
 %type <sval> IDENT Type
-%type <sval> Expr
+%type <sval> Expr Designator
 
 %%
 
@@ -103,9 +103,18 @@ Type       : IDENT
             }'[' ']'
            ;
 
-Statment   : Designator '=' { resolveDesignator("variable"); } Expr ';'
-     | Designator '(' { resolveDesignator("method"); } ')' ';' 
-     | Designator '(' { resolveDesignator("method"); } ActPars ')' ';' 
+Statment   : Designator '=' {
+              Symbol s = resolveDesignator("variable");
+              if(s != null) {
+                if(!s.kinds.contains(Symbol.Kind.Variable)) {
+                  System.out.println("Attributions must have on the left side a variable, object field or array, " + s.name + " isn't any of that.");
+                }
+              }
+            } Expr { 
+              Symbol type = exprStack.peek();
+            }';'
+     | Designator '(' { currentDesignatorName = $1; resolveDesignator("method"); } ')' ';' 
+     | Designator '(' { currentDesignatorName = $1; resolveDesignator("method"); } ActPars ')' ';' 
      | Designator {
           Symbol s = resolveDesignator("variable");
           if(!s.kinds.contains(Symbol.Kind.Variable)) {
@@ -133,8 +142,21 @@ Statment   : Designator '=' { resolveDesignator("variable"); } Expr ';'
         }
       } ';'
      | RETURN Expr ';'
-     | RETURN ';'
-     | READ  '(' Designator { resolveDesignator("variable"); } ')' ';'
+     | RETURN ';' { 
+        if(!currentScope.type.name.equals("void")) {
+          System.out.println("This method must return " + currentScope.type.name + ". So, it can't return void.");
+        }
+     }
+     | READ  '(' Designator {
+        Symbol s = resolveDesignator("variable");
+        if(s != null) {
+          if(!s.kinds.contains(Symbol.Kind.Variable)) {
+            System.out.println("Read must have as parameter a variable, object field or array, " + s.name + " isn't any of that.");
+          } else if(!s.type.name.equals("int") && !s.type.name.equals("char")) {
+            System.out.println("Read must have as parameter int or char.");
+          }
+        }
+      } ')' ';'
      | WRITE '(' Expr ')' ';'
      | WRITE '(' Expr ',' NUMBER  ')' ';'
      | Block
@@ -155,54 +177,62 @@ ListExpr     : ',' Expr ListExpr
              |
              ;
 
-Expr         : Expr LOGICALOR Expr 
-             | Expr  LOGICALAND Expr  
-             | Expr  GTE  Expr 
-             | Expr  EQEQ Expr 
-             | Expr  DIF  Expr 
-             | Expr  LTE  Expr 
-             | Expr  '>'  Expr {
-                Symbol _1 = exprStack.pop();
-                Symbol _3 = exprStack.pop();
-                Symbol _1Type, _3Type;
-
-                if(!_1.kinds.contains(Symbol.Kind.Type)) {
-                  _1Type = _1.type;
+Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
+             | Expr  LOGICALAND Expr  { checkLogicOperation(); }
+             | Expr  GTE  Expr { checkLogicOperation(); }
+             | Expr  EQEQ Expr { checkLogicOperation(); }
+             | Expr  DIF  Expr { checkLogicOperation(); }
+             | Expr  LTE  Expr { checkLogicOperation(); }
+             | Expr  '>'  Expr { checkLogicOperation(); }
+             | Expr  '<'  Expr { checkLogicOperation(); }
+             | Expr  '+'  Expr { checkNumericOperation(); }
+             | Expr  '-'  Expr { checkNumericOperation(); }
+             | '-' Expr  %prec NEG { exprStack.push(exprStack.pop()); }
+             | Expr  '*'  Expr { checkNumericOperation(); }
+             | Expr  '/'  Expr { checkNumericOperation(); }
+             | Expr  '%'  Expr { checkNumericOperation(); }
+             | Designator {
+                  currentDesignatorName = $1;
+                  Symbol s = resolveDesignator("variable");
+                  if(s == null) {
+                    s = resolveDesignator("constant");
+                  }
+                  if(currentDesignatorName.equals("null") || s == null) {
+                    exprStack.push(getType("null"));
+                  } else {
+                    exprStack.push(s.type);
+                  }
+              }
+             | Designator '(' ')' {
+                currentDesignatorName = $1;
+                Symbol s = resolveDesignator("method");
+                if(s == null) {
+                  exprStack.push(getType("null"));
                 } else {
-                  _1Type = _1;
+                  exprStack.push(s.type);
                 }
-
-                if(!_3.kinds.contains(Symbol.Kind.Type)) {
-                  _3Type = _3.type;
+              }
+             | Designator '(' { 
+                currentDesignatorName = $1;
+                Symbol s = resolveDesignator("method");
+                if(s == null) {
+                  exprStack.push(getType("null"));
                 } else {
-                  _3Type = _3;
+                  exprStack.push(s.type);
                 }
-                if(_1Type != _3Type) {
-                  System.out.println("Incompatible types for " + _1.name + " and " + _3.name + ".");
-                }
-            }
-             | Expr  '<'  Expr 
-             | Expr  '+'  Expr 
-             | Expr  '-'  Expr 
-             | '-' Expr  %prec NEG
-             | Expr  '*'  Expr 
-             | Expr  '/'  Expr 
-             | Expr  '%'  Expr 
-             | Designator { exprStack.push(resolveDesignator("variable")); }
-             | Designator '(' ')' { exprStack.push(resolveDesignator("method")); }
-             | Designator '(' { exprStack.push(resolveDesignator("method")); } ActPars ')'
+              } ActPars ')'
              | NUMBER { exprStack.push(getType("int")); /* TODO: */ }
              | CHARCONST { exprStack.push(getType("int")); /* TODO: */ }
              | NEW IDENT { exprStack.push(getType("int")); /* TODO: */ }
              | NEW IDENT '[' Expr ']' { exprStack.push(getType("int")); /* TODO: */ }
-             | '(' Expr ')' { exprStack.push(getType("int")); /* TODO: */ }
+             | '(' Expr ')' { }
              ;
 
 Designator   : IDENT { designatorStack.begin(); designatorStack.push($1); } ListIdentExpr
              ;
              
 ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
-             | '[' Expr ']' ListIdentExpr
+             | '[' Expr { exprStack.pop(); } ']' ListIdentExpr
              |
              ;
      
@@ -214,6 +244,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
   private static StackStack<String> designatorStack;
   private static boolean insideWhileLoop, insideClassDecl;
   private static Stack<Symbol> exprStack;
+  private static String currentDesignatorName;
 
   private Symbol pushScope(Symbol s) {
     Symbol oldCurrentScope = currentScope;
@@ -271,6 +302,69 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
     return constant;
   }
 
+  private void checkLogicOperation() {
+    Symbol _1 = exprStack.pop();
+    Symbol _3 = exprStack.pop();
+
+    if(_1 == getType("null") || _3 == getType("null")) {
+      return;
+    }
+
+    if(_1 != _3) {
+      System.out.println("Incompatible types for " + _1.name + " and " + _3.name + ".");
+    }
+    exprStack.push(getType("boolean"));
+
+  }
+
+  private void checkNumericOperation() {
+    Symbol _1 = exprStack.pop();
+    Symbol _3 = exprStack.pop();
+
+    if(_1 != _3) {
+      System.out.println("Incompatible types for " + _1.name + " and " + _3.name + ".");
+    }
+    exprStack.push(getType("int"));
+  }
+
+/*
+ *  First of all, sorry for the long method. I swear, it was very very hard to think about it.
+ *  Feel free to improve it and make it pretty if you want, but this method is really dangerous.
+ *  Now, because of that things, I think that an explain about this would be nice, so, here it goes:
+ */
+
+/*
+ * This method resolves the designator stack, so, it can return any useful designator.
+ * -------------------------------
+ * Examples:
+ * -------------------------------
+ * - myVar.myProperty[myIndex.giveMeIndex] : will retrieve "myProperty"
+ *
+ * -------------------------------
+ * Why do I need to do that?
+ * -------------------------------
+ * Simple, look at the example, if you see it as the gramatic tree, it should be something like:
+ *
+ *  IDENT   ListIdentExpr
+ *                       \
+ *                        . IDENT [ EXPR ]
+ *                                   |
+ *                               Designator
+ *                              /          \
+ *                           IDENT          ListIdentExpr
+ *                                                       \
+ *                                                        . IDENT [ EXPR ]
+ *                                                                    |
+ *                                                                Designator
+ *                                                               /    |     \
+ *                                                              IDENT   .    IDENT
+ * ---
+ * This is what I call a designator mess.
+ * But it's not so bad, if you look at the structure, it can be easily solved with a stack :)
+ * And this is what resolveDesignator does, it manages this resolution algorithm using stacks!
+ * Cool right?
+ * ---
+ 
   private Symbol resolveDesignator(String resolveType) {
     int size = designatorStack.size();
     String el;
@@ -281,10 +375,15 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
       el = designatorStack.pop();
       if(resolveType.equals("variable")) {
         r = getVariable(el);
+        if(r == null) {
+          r = getConstant(el);
+        }
       } else if(resolveType.equals("method")) {
         r = getMethod(el);
-      } 
-      if(r == null) {
+        if(r == null) {
+          System.out.println("Method " + currentDesignatorName + " not found");
+        }
+      } else if(resolveType.equals("constant")) {
         r = getConstant(el);
       }
     } else {

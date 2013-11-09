@@ -10,6 +10,7 @@ public class Symbol {
 		, Array // anything that has some kind of index
 		, Field // an class object, maybe it could also be a method of a class
 		, Variable // well, you know, variables :)
+		, Method
 		, Type
 	}
 
@@ -58,6 +59,25 @@ public class Symbol {
 			Symbol nullSymbol = new Symbol();
 			nullSymbol.name = "null";
 			constants.put("null", nullSymbol);
+			types.put("null", nullSymbol);
+
+			Symbol _len = new Symbol();
+			_len.name = "len";
+			_len.type = intSymbol;
+			_len.kinds.add(Kind.Method);
+			methods.put("len", _len);
+
+			Symbol _ord = new Symbol();
+			_ord.name = "ord";
+			_ord.type = intSymbol;
+			_ord.kinds.add(Kind.Method);
+			methods.put("ord", _ord);
+
+			Symbol _chr = new Symbol();
+			_chr.name = "chr";
+			_chr.type = charSymbol;
+			_chr.kinds.add(Kind.Method);
+			methods.put("chr", _chr);
 		}
 	}
 
@@ -68,7 +88,7 @@ public class Symbol {
 	public Symbol addClass(String name) {
 		Symbol s = new Symbol();
 		s.name = name;
-		kinds.add(Kind.Class);
+		s.kinds.add(Kind.Class);
 
 		types.put(name, s);
 		return s;
@@ -79,6 +99,7 @@ public class Symbol {
 		s.name = name;
 		s.type = type;
 
+		s.kinds.add(Kind.Variable);
 		variables.put(name, s);
 		return s;
 	}
@@ -97,6 +118,7 @@ public class Symbol {
 		s.name = name;
 		s.type = type;
 
+		s.kinds.add(Kind.Method);
 		methods.put(name, s);
 		return s;
 	}
