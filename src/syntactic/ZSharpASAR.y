@@ -269,7 +269,12 @@ Designator   : IDENT { designatorStack.begin(); designatorStack.push($1); } List
              ;
              
 ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
-             | '[' Expr { exprStack.pop(); } ']' ListIdentExpr
+             | '[' Expr {
+                  Symbol s = exprStack.pop();
+                  if(s != getType("int")) {
+                    System.out.println("Array indexes must be int, " + s.name + " is not that.");
+                  }
+                } ']' ListIdentExpr
              |
              ;
      
