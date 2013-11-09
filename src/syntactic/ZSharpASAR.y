@@ -157,8 +157,8 @@ Statment   : Designator '=' {
           }
         }
       } ')' ';'
-     | WRITE '(' Expr ')' ';'
-     | WRITE '(' Expr ',' NUMBER  ')' ';'
+     | WRITE '(' Expr { exprStack.pop(); } ')' ';'
+     | WRITE '(' Expr { exprStack.pop(); } ',' NUMBER  ')' ';'
      | Block
      | ';' 
      ;
@@ -170,7 +170,7 @@ ListStatment : Statment ListStatment
 Block        : '{' ListStatment '}'
              ;
 
-ActPars      : Expr ListExpr
+ActPars      : Expr { exprStack.pop(); } ListExpr
              ;
              
 ListExpr     : ',' Expr ListExpr
@@ -223,14 +223,17 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
               } ActPars ')'
              | NUMBER { exprStack.push(getType("int")); /* TODO: */ }
              | CHARCONST { exprStack.push(getType("char")); /* TODO: */ }
-             | NEW IDENT { }
+             | NEW IDENT { 
+                Symbol s = getType($2);
+                exprStack.push(s);
+             }
              | NEW IDENT '[' Expr {
                 Symbol s = exprStack.pop();
                 if(s != getType("int")) {
                   System.out.println("Arrays of types can only be created with integer sizes " + s.name + " is not an integer type.");
                 }
               } ']'
-             | '(' Expr { } ')'
+             | '(' Expr ')'
              ;
 
 Designator   : IDENT { designatorStack.begin(); designatorStack.push($1); } ListIdentExpr
