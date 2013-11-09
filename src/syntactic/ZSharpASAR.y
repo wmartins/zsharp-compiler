@@ -161,8 +161,16 @@ Statment   : Designator '=' {
           }
         }
       } ')' ';'
-     | WRITE '(' Expr { exprStack.pop(); } ')' ';'
-     | WRITE '(' Expr { exprStack.pop(); } ',' NUMBER  ')' ';'
+     | WRITE '(' Expr {
+        Symbol type = exprStack.pop();
+        if(type != getType("int") && type!= getType("char")) {
+          System.out.println("Write operation can only be applied to int or char, " + type.name + " is not any of that.");
+        } } ')' ';'
+     | WRITE '(' Expr {
+        Symbol type = exprStack.pop();
+        if(type != getType("int") && type!= getType("char")) {
+          System.out.println("Write operation can only be applied to int or char, " + type.name + " is not any of that.");
+        } } ',' NUMBER  ')' ';'
      | Block
      | ';' 
      ;
