@@ -191,7 +191,14 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
              | Expr  '<'  Expr { checkLogicOperation(); }
              | Expr  '+'  Expr { checkNumericOperation(); }
              | Expr  '-'  Expr { checkNumericOperation(); }
-             | '-' Expr  %prec NEG { exprStack.push(exprStack.pop()); }
+             | '-' Expr  %prec NEG {
+                Symbol type = exprStack.pop();
+                if(type != getType("int")) {
+                  System.out.println("The unary minus operation can be only applied to int, " + type.name + " is not int.");
+                }
+                exprStack.push(type);
+
+              }
              | Expr  '*'  Expr { checkNumericOperation(); }
              | Expr  '/'  Expr { checkNumericOperation(); }
              | Expr  '%'  Expr { checkNumericOperation(); }
