@@ -145,7 +145,7 @@ Statment   : Designator '=' {
                 yyerror("Incompatible types for " + currentSymbol.type.name + " and " + type.name + ".");
               }
             }';'
-     | Designator '(' { currentDesignatorName = $1; resolveDesignator("method"); } ')' ';' 
+     | Designator '(' { actPars = new ArrayList<Symbol>(); currentDesignatorName = $1; resolveDesignator("method"); } ')' ';' 
      | Designator '(' ActPars { currentDesignatorName = $1; resolveDesignator("method"); } ')' ';' 
      | Designator {
           Symbol s = resolveDesignator("variable");
