@@ -125,7 +125,7 @@ Type       : IDENT {
            | IDENT '[' ']' {
               Symbol type = getType($1);
               if(type == null) {
-                System.out.println("Error: " + $1 + " must be a type");
+                yyerror("Error: " + $1 + " must be a type");
               }
               currentTypeArray = true;
             }
@@ -136,13 +136,13 @@ Statment   : Designator '=' {
               currentSymbol = s;
               if(s != null) {
                 if(!s.kinds.contains(Symbol.Kind.Variable)) {
-                  System.out.println("Attributions must have on the left side a variable, object field or array, " + s.name + " isn't any of that.");
+                  yyerror("Attributions must have on the left side a variable, object field or array, " + s.name + " isn't any of that.");
                 }
               }
             } Expr { 
               Symbol type = exprStack.peek();
               if(currentSymbol.type != type) {
-                System.out.println("Incompatible types for " + currentSymbol.type.name + " and " + type.name + ".");
+                yyerror("Incompatible types for " + currentSymbol.type.name + " and " + type.name + ".");
               }
             }';'
      | Designator '(' { currentDesignatorName = $1; resolveDesignator("method"); } ')' ';' 
@@ -150,19 +150,19 @@ Statment   : Designator '=' {
      | Designator {
           Symbol s = resolveDesignator("variable");
           if(!s.kinds.contains(Symbol.Kind.Variable)) {
-            System.out.println("Increment operator must be a variable, object field or array, " + s.name + " isn't any of that.");
+            yyerror("Increment operator must be a variable, object field or array, " + s.name + " isn't any of that.");
           }
           if(s.type != getType("int")) {
-            System.out.println("Increment operator must be int, " + s.name + " is " + s.type.name);
+            yyerror("Increment operator must be int, " + s.name + " is " + s.type.name);
           }
       } ADDITIVESUM ';'
      | Designator {
         Symbol s = resolveDesignator("variable");
         if(!s.kinds.contains(Symbol.Kind.Variable)) {
-          System.out.println("Decrement operator must be a variable, object field or array, " + s.name + " isn't any of that.");
+          yyerror("Decrement operator must be a variable, object field or array, " + s.name + " isn't any of that.");
         }
         if(s.type != getType("int")) {
-          System.out.println("Increment operator must be int, " + s.name + " is " + s.type.name);
+          yyerror("Increment operator must be int, " + s.name + " is " + s.type.name);
         }
       } ADDITIVESUB ';'
      | IF '(' Expr ')' Statment 
@@ -170,41 +170,41 @@ Statment   : Designator '=' {
      | WHILE '(' Expr ')' { insideWhileLoop = true; } Statment { insideWhileLoop = false; } 
      | BREAK {
         if(!insideWhileLoop) {
-          System.out.println("Break command must be inside while loop");
+          yyerror("Break command must be inside while loop");
         }
       } ';'
      | RETURN Expr {
         Symbol s = exprStack.pop();
 
         if(currentScope.type != s) {
-          System.out.println("This method must return " + currentScope.type.name + ". So, it can't return " + s.name + ".");
+          yyerror("This method must return " + currentScope.type.name + ". So, it can't return " + s.name + ".");
         }
      }';'
      | RETURN ';' { 
         if(!currentScope.type.name.equals("void")) {
-          System.out.println("This method must return " + currentScope.type.name + ". So, it can't return void.");
+          yyerror("This method must return " + currentScope.type.name + ". So, it can't return void.");
         }
      }
      | READ  '(' Designator {
         Symbol s = resolveDesignator("variable");
         if(s != null) {
           if(!s.kinds.contains(Symbol.Kind.Variable)) {
-            System.out.println("Read must have as parameter a variable, object field or array, " + s.name + " isn't any of that.");
+            yyerror("Read must have as parameter a variable, object field or array, " + s.name + " isn't any of that.");
           } else if(!s.type.name.equals("int") && !s.type.name.equals("char")) {
-            System.out.println("Read must have as parameter int or char.");
+            yyerror("Read must have as parameter int or char.");
           }
         }
       } ')' ';'
      | WRITE '(' Expr {
         Symbol type = exprStack.pop();
         if(type != getType("int") && type!= getType("char")) {
-          System.out.println("Write operation can only be applied to int or char, " + type.name + " is not any of that.");
+          yyerror("Write operation can only be applied to int or char, " + type.name + " is not any of that.");
         }
       } ')' ';'
      | WRITE '(' Expr {
         Symbol type = exprStack.pop();
         if(type != getType("int") && type!= getType("char")) {
-          System.out.println("Write operation can only be applied to int or char, " + type.name + " is not any of that.");
+          yyerror("Write operation can only be applied to int or char, " + type.name + " is not any of that.");
         }
       } ',' NUMBER  ')' ';'
      | Block
@@ -238,7 +238,7 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
              | '-' Expr  %prec NEG {
                 Symbol type = exprStack.pop();
                 if(type != getType("int")) {
-                  System.out.println("The unary minus operation can be only applied to int, " + type.name + " is not int.");
+                  yyerror("The unary minus operation can be only applied to int, " + type.name + " is not int.");
                 }
                 exprStack.push(type);
 
@@ -286,7 +286,7 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
              | NEW IDENT '[' Expr {
                 Symbol s = exprStack.pop();
                 if(s != getType("int")) {
-                  System.out.println("Arrays of types can only be created with integer sizes " + s.name + " is not an integer type.");
+                  yyerror("Arrays of types can only be created with integer sizes " + s.name + " is not an integer type.");
                 }
                 Symbol type = getType($2);
                 exprStack.push(type);
@@ -301,7 +301,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
              | '[' Expr {
                   Symbol s = exprStack.pop();
                   if(s != getType("int")) {
-                    System.out.println("Array indexes must be int, " + s.name + " is not that.");
+                    yyerror("Array indexes must be int, " + s.name + " is not that.");
                   }
                 } ']' ListIdentExpr
              |
@@ -383,7 +383,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
     }
 
     if(_1 != _3) {
-      System.out.println("Incompatible types for " + _1.name + " and " + _3.name + ".");
+      yyerror("Incompatible types for " + _1.name + " and " + _3.name + ".");
     }
     exprStack.push(getType("boolean"));
 
@@ -394,7 +394,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
     Symbol _3 = exprStack.pop();
 
     if(_1 != _3) {
-      System.out.println("Incompatible types for " + _1.name + " and " + _3.name + ".");
+      yyerror("Incompatible types for " + _1.name + " and " + _3.name + ".");
     }
     exprStack.push(getType("int"));
   }
@@ -470,7 +470,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
           if(type != null) {
             r = variable = type.getVariable(el);
             if(variable == null) {
-              System.out.println(el + " is not a property of " + type.name);
+              yyerror(el + " is not a property of " + type.name);
             } else {
               type = variable.type;
             }
