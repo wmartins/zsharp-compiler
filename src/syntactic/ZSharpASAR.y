@@ -454,7 +454,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
       } else if(resolveType.equals("method")) {
         r = getMethod(el);
         if(r == null) {
-          System.out.println("Method " + currentDesignatorName + " not found");
+          yyerror("Method " + currentDesignatorName + " not found");
         }
       } else if(resolveType.equals("constant")) {
         r = getConstant(el);
