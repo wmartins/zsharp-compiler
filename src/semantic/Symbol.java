@@ -24,7 +24,7 @@ public class Symbol {
 	public HashMap<String,Symbol> types;
 	public HashMap<String,Symbol> variables;
 	public HashMap<String,Symbol> constants;
-	public HashMap<String,Symbol> methods;
+	public HashMap<String,ArrayList<Symbol>> methods;
 	public ArrayList<Symbol> arguments;
 
 	public void construct() {
@@ -32,7 +32,7 @@ public class Symbol {
 		types = new HashMap<String,Symbol>();
 		variables = new HashMap<String,Symbol>();
 		constants = new HashMap<String,Symbol>();
-		methods = new HashMap<String,Symbol>();
+		methods = new HashMap<String,ArrayList<Symbol>>();
 		arguments = new ArrayList<Symbol>();
 	}
 
@@ -45,10 +45,24 @@ public class Symbol {
 			types.put("int", intSymbol);
 			intSymbol.kinds.add(Kind.Type);
 
+			ArrayList<Symbol> intParams = new ArrayList<Symbol>();
+			Symbol intParam = new Symbol();
+			intParam.name = "arr";
+			intParam.type = intSymbol;
+			intParams.add(intParam);
+			addMethod("len", intSymbol, intParams);
+
 			Symbol charSymbol = new Symbol();
 			charSymbol.name = "char";
 			types.put("char", charSymbol);
 			charSymbol.kinds.add(Kind.Type);
+
+			ArrayList<Symbol> charParams = new ArrayList<Symbol>();
+			Symbol charParam = new Symbol();
+			charParam.name = "arr";
+			charParam.type = charSymbol;
+			charParams.add(charParam);
+			addMethod("len", intSymbol, charParams);
 
 			Symbol booleanSymbol = new Symbol();
 			booleanSymbol.name = "boolean";
@@ -65,23 +79,19 @@ public class Symbol {
 			constants.put("null", nullSymbol);
 			types.put("null", nullSymbol);
 
-			Symbol _len = new Symbol();
-			_len.name = "len";
-			_len.type = intSymbol;
-			_len.kinds.add(Kind.Method);
-			methods.put("len", _len);
+			ArrayList<Symbol> _ordParams = new ArrayList<Symbol>();
+			Symbol _ordParam = new Symbol();
+			_ordParam.name = "chr";
+			_ordParam.type = getType("char");
+			_ordParams.add(_ordParam);
+			addMethod("ord", intSymbol, _ordParams);
 
-			Symbol _ord = new Symbol();
-			_ord.name = "ord";
-			_ord.type = intSymbol;
-			_ord.kinds.add(Kind.Method);
-			methods.put("ord", _ord);
-
-			Symbol _chr = new Symbol();
-			_chr.name = "chr";
-			_chr.type = charSymbol;
-			_chr.kinds.add(Kind.Method);
-			methods.put("chr", _chr);
+			ArrayList<Symbol> _chrParams = new ArrayList<Symbol>();
+			Symbol _chrParam = new Symbol();
+			_chrParam.name = "nro";
+			_chrParam.type = getType("int");
+			_chrParams.add(_chrParam);
+			addMethod("chr", charSymbol, _chrParams);
 		}
 	}
 
@@ -95,7 +105,17 @@ public class Symbol {
 		s.kinds.add(Kind.Class);
 
 		types.put(name, s);
+
 		return s;
+	}
+
+	public Symbol addLenMethod(Symbol klass, Symbol type) {
+		ArrayList<Symbol> sParams = new ArrayList<Symbol>();
+		Symbol sParam = new Symbol();
+		sParam.name = "arr";
+		sParam.type = klass;
+		sParams.add(sParam);
+		return addMethod("len", type, sParams);
 	}
 
 	public Symbol addVariable(String name, Symbol type, boolean argument) {
@@ -151,7 +171,12 @@ public class Symbol {
 		s.type = type;
 
 		s.kinds.add(Kind.Method);
-		methods.put(name, s);
+
+		ArrayList<Symbol> m = methods.get(name);
+		if(m == null) {
+			methods.put(name, new ArrayList<Symbol>());
+		}
+		methods.get(name).add(s);
 		return s;
 	}
 
@@ -163,16 +188,30 @@ public class Symbol {
 		return variables.get(name);
 	}
 
-	public Symbol getMethod(String name) {
-		return methods.get(name);
+	public Symbol getMethod(String name, ArrayList<Symbol> actPars) {
+		ArrayList<Symbol> m = methods.get(name);
+		int i = 0;
+		Symbol r = null;
+		if(m != null) {
+			for(Symbol method : m) {
+				r = method;
+				if(actPars.size() == method.arguments.size()) {
+					for(Symbol argument : method.arguments) {
+						if(actPars.get(0) != argument.type) {
+							r = null;
+						}
+					}
+				}
+				if(r != null) {
+					return r;
+				}
+			}
+		}
+		return r;
 	}
 
 	public Symbol getConstant(String name) {
 		return constants.get(name);
-	}
-
-	public Symbol getSymbol(String name) {
-		return methods.get(name);
 	}
 
 	public void describe() {
@@ -188,7 +227,7 @@ public class Symbol {
 		describeInner(types.entrySet().iterator(), level);
 		describeInner(constants.entrySet().iterator(), level);
 		describeInner(variables.entrySet().iterator(), level);
-		describeInner(methods.entrySet().iterator(), level);
+		describeMethods(methods.entrySet().iterator(), level);
 	}
 
 	private void describeInner(Iterator it, int level) {
@@ -196,6 +235,20 @@ public class Symbol {
 			Map.Entry pairs = (Map.Entry) it.next();
 			Symbol s = (Symbol)pairs.getValue();
 			s.describe(level + 1);
+		}
+	}
+
+	private void describeMethods(Iterator it, int level) {
+		while(it.hasNext()) {
+			Map.Entry pairs = (Map.Entry) it.next();
+			ArrayList<Symbol> m = (ArrayList<Symbol>)pairs.getValue();
+			for(Symbol method : m) {
+				System.out.print("[" + method.name + "(");
+				for(Symbol argument : method.arguments) {
+					System.out.print(argument.type.name + ",");
+				}
+				System.out.println(")]");
+			}
 		}
 	}
 

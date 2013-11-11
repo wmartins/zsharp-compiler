@@ -76,7 +76,10 @@ ListIDENT  : ',' IDENT {
      ;
 
 ClassDecl  : CLASS IDENT {
-              insideClassDecl = true; pushScope(currentScope.addClass($2));
+              insideClassDecl = true;
+              Symbol s = currentScope.addClass($2);
+              currentScope.addLenMethod(s, getType("int"));
+              pushScope(s);
             } '{' ListVarDecl '}' { insideClassDecl = false; popScope(currentScope); };
 
 ListVarDecl: VarDecl ListVarDecl
@@ -84,12 +87,12 @@ ListVarDecl: VarDecl ListVarDecl
            ;
 MethodDecl : Type IDENT '(' { pushScope(currentScope.addMethod($2, getType($1))); } ')' ListVarDecl Block { popScope(currentScope); }
            | VOID IDENT '(' { pushScope(currentScope.addMethod($2, getType("void"))); } ')' ListVarDecl Block { popScope(currentScope); }
-           | Type IDENT '(' { formPars.clear(); } FormPars {
+           | Type IDENT '(' { formPars = new ArrayList<Symbol>(); } FormPars {
               
               pushScope(currentScope.addMethod($2, getType($1), formPars));
 
             } ')' ListVarDecl Block { popScope(currentScope); }
-           | VOID IDENT '(' { formPars.clear(); } FormPars {
+           | VOID IDENT '(' { formPars = new ArrayList<Symbol>(); } FormPars {
               
               pushScope(currentScope.addMethod($2, getType("void"), formPars));
 
@@ -143,7 +146,7 @@ Statment   : Designator '=' {
               }
             }';'
      | Designator '(' { currentDesignatorName = $1; resolveDesignator("method"); } ')' ';' 
-     | Designator '(' { currentDesignatorName = $1; resolveDesignator("method"); } ActPars ')' ';' 
+     | Designator '(' ActPars { currentDesignatorName = $1; resolveDesignator("method"); } ')' ';' 
      | Designator {
           Symbol s = resolveDesignator("variable");
           if(!s.kinds.contains(Symbol.Kind.Variable)) {
@@ -215,10 +218,10 @@ ListStatment : Statment ListStatment
 Block        : '{' ListStatment '}'
              ;
 
-ActPars      : Expr { exprStack.pop(); } ListExpr
+ActPars      : Expr { actPars = new ArrayList<Symbol>(); actPars.add(exprStack.pop()); } ListExpr
              ;
              
-ListExpr     : ',' Expr ListExpr
+ListExpr     : ',' Expr { actPars.add(exprStack.pop()); } ListExpr
              |
              ;
 
@@ -256,6 +259,7 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
                   }
               }
              | Designator '(' ')' {
+                actPars = new ArrayList<Symbol>();
                 currentDesignatorName = $1;
                 Symbol s = resolveDesignator("method");
                 if(s == null) {
@@ -264,7 +268,7 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
                   exprStack.push(s.type);
                 }
               }
-             | Designator '(' { 
+             | Designator '(' ActPars { 
                 currentDesignatorName = $1;
                 Symbol s = resolveDesignator("method");
                 if(s == null) {
@@ -272,7 +276,7 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
                 } else {
                   exprStack.push(s.type);
                 }
-              } ActPars ')'
+              } ')'
              | NUMBER { exprStack.push(getType("int")); /* TODO: */ }
              | CHARCONST { exprStack.push(getType("char")); /* TODO: */ }
              | NEW IDENT { 
@@ -312,7 +316,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
   private static boolean insideWhileLoop, insideClassDecl, currentTypeArray, methodDeclaration;
   private static Stack<Symbol> exprStack;
   private static String currentDesignatorName;
-  private static ArrayList<Symbol> formPars;
+  private static ArrayList<Symbol> formPars, actPars;
 
   private Symbol pushScope(Symbol s) {
     Symbol oldCurrentScope = currentScope;
@@ -338,12 +342,12 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
   }
 
   private Symbol getMethod(String s) {
-    Symbol method = currentScope.getMethod(s);
+    Symbol method = currentScope.getMethod(s, actPars);
     if(method == null) {
-      method = programScope.getMethod(s);
+      method = programScope.getMethod(s, actPars);
     }
     if(method == null) {
-      method = universe.getMethod(s);
+      method = universe.getMethod(s, actPars);
     }
     return method;
   }
@@ -519,6 +523,7 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
     designatorStack = new StackStack<String>();
     exprStack = new Stack<Symbol>();
     formPars = new ArrayList<Symbol>();
+    actPars = new ArrayList<Symbol>();
 
     System.out.println("");
 
