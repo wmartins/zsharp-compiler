@@ -201,6 +201,8 @@ public class Symbol {
 							r = null;
 						}
 					}
+				} else {
+					r = null;
 				}
 				if(r != null) {
 					return r;
