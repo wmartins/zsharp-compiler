@@ -52,6 +52,18 @@ public class Symbol {
 			intParams.add(intParam);
 			addMethod("len", intSymbol, intParams);
 
+			Symbol doubleSymbol = new Symbol();
+			doubleSymbol.name = "double";
+			types.put("double", doubleSymbol);
+			doubleSymbol.kinds.add(Kind.Type);
+
+			ArrayList<Symbol> doubleParams = new ArrayList<Symbol>();
+			Symbol doubleParam = new Symbol();
+			doubleParam.name = "arr";
+			doubleParam.type = doubleParam;
+			doubleParams.add(doubleParam);
+			addMethod("len", doubleSymbol, doubleParams);
+
 			Symbol charSymbol = new Symbol();
 			charSymbol.name = "char";
 			types.put("char", charSymbol);

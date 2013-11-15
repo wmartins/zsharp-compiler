@@ -16,7 +16,7 @@
 %token EQEQ DIF GT GTE LT LTE 
 %token ADDITIVESUM ADDITIVESUB LOGICALAND LOGICALOR CHARCONST
 %token IF BREAK CONST ELSE CLASS NEW READ WRITE VOID WHILE RETURN
-%token IDENT NUMBER 
+%token IDENT DECIMALNUMBER NUMBER
 
 %left LOGICALOR
 %left LOGICALAND
@@ -38,7 +38,11 @@ ListDecl   : ConstDecl ListDecl
      | ClassDecl ListDecl
      |;
   
-ConstDecl  : CONST Type IDENT '=' NUMBER ';' {
+ConstDecl  : CONST Type IDENT '=' IntegerNumber ';' {
+              Symbol type = getType($2);
+              currentScope.addConstant($3, type);
+            }
+     | CONST Type IDENT '=' DecimalNumber ';' {
               Symbol type = getType($2);
               currentScope.addConstant($3, type);
             }
@@ -142,7 +146,9 @@ Statment   : Designator '=' {
             } Expr { 
               Symbol type = exprStack.peek();
               if(currentSymbol.type != type) {
-                yyerror("Incompatible types for " + currentSymbol.type.name + " and " + type.name + ".");
+                if(currentSymbol.type == getType("int") && type == getType("double")) {
+                  yyerror("Incompatible types for " + currentSymbol.type.name + " and " + type.name + ".");
+                }
               }
             }';'
      | Designator '(' { actPars = new ArrayList<Symbol>(); currentDesignatorName = $1; resolveDesignator("method"); } ')' ';' 
@@ -277,7 +283,8 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
                   exprStack.push(s.type);
                 }
               } ')'
-             | NUMBER { exprStack.push(getType("int")); /* TODO: */ }
+             | DecimalNumber { exprStack.push(getType("double")); }
+             | IntegerNumber { exprStack.push(getType("int")); /* TODO: */ }
              | CHARCONST { exprStack.push(getType("char")); /* TODO: */ }
              | NEW IDENT { 
                 Symbol s = getType($2);
@@ -306,6 +313,9 @@ ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
                 } ']' ListIdentExpr
              |
              ;
+
+IntegerNumber: NUMBER;
+DecimalNumber: DECIMALNUMBER;
      
 
 %%
