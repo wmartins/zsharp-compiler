@@ -301,11 +301,11 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
              | '(' Expr ')'
              ;
 
-Designator   : IDENT { designatorStack.begin(); designatorStack.push($1); } ListIdentExpr
+Designator   : IDENT { designatorStack.begin(); designatorStack.push($1); designatorMustBeArrayStack.push(false); } ListIdentExpr
              ;
              
-ListIdentExpr: '.' IDENT { designatorStack.push($2); } ListIdentExpr
-             | '[' Expr {
+ListIdentExpr: '.' IDENT { designatorMustBeArrayStack.push(false); designatorStack.push($2); } ListIdentExpr
+             | '[' { designatorMustBeArrayStack.push(true); } Expr {
                   Symbol s = exprStack.pop();
                   if(s != getType("int")) {
                     yyerror("Array indexes must be int, " + s.name + " is not that.");
@@ -323,7 +323,8 @@ DecimalNumber: DECIMALNUMBER;
   private Yylex lexer;
   private static Symbol universe, currentScope, programScope, currentTypeVarDecl, currentSymbol;
   private static StackStack<String> designatorStack;
-  private static boolean insideWhileLoop, insideClassDecl, currentTypeArray, methodDeclaration;
+  private static boolean insideWhileLoop, insideClassDecl, currentTypeArray, methodDeclaration, designatorMustBeArray;
+  private static Stack<Boolean> designatorMustBeArrayStack;
   private static Stack<Symbol> exprStack;
   private static String currentDesignatorName;
   private static ArrayList<Symbol> formPars, actPars;
@@ -500,6 +501,13 @@ DecimalNumber: DECIMALNUMBER;
     }
     designatorStack.end();
 
+    if(designatorMustBeArrayStack.pop()) {
+      if(resolveType.equals("variable")) {
+        if(!r.kinds.contains(Symbol.Kind.Array)) {
+          yyerror(r.name + " must be an array");
+        }
+      }
+    }
     return r;
   }
 
@@ -539,6 +547,7 @@ DecimalNumber: DECIMALNUMBER;
     exprStack = new Stack<Symbol>();
     formPars = new ArrayList<Symbol>();
     actPars = new ArrayList<Symbol>();
+    designatorMustBeArrayStack = new Stack<Boolean>();
 
     System.out.println("");
 
