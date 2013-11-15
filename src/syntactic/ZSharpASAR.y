@@ -461,6 +461,9 @@ DecimalNumber: DECIMALNUMBER;
         if(r == null) {
           r = getConstant(el);
         }
+        if(r == null) {
+          yyerror(el + " not declared.");
+        }
       } else if(resolveType.equals("method")) {
         r = getMethod(el);
         if(r == null) {
@@ -488,6 +491,8 @@ DecimalNumber: DECIMALNUMBER;
             variable = getVariable(el);
             if(variable != null) {
               type = variable.type;
+            } else {
+              yyerror(el + " not declared.");
             }
           }
         }
