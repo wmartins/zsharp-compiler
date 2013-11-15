@@ -237,8 +237,8 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
              | Expr  LTE  Expr { checkLogicOperation(); }
              | Expr  '>'  Expr { checkLogicOperation(); }
              | Expr  '<'  Expr { checkLogicOperation(); }
-             | Expr  '+'  Expr { checkNumericOperation(); }
-             | Expr  '-'  Expr { checkNumericOperation(); }
+             | Expr  '+'  Expr { checkNumericOperation('+'); }
+             | Expr  '-'  Expr { checkNumericOperation('-'); }
              | '-' Expr  %prec NEG {
                 Symbol type = exprStack.pop();
                 if(type != getType("int")) {
@@ -247,9 +247,9 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
                 exprStack.push(type);
 
               }
-             | Expr  '*'  Expr { checkNumericOperation(); }
-             | Expr  '/'  Expr { checkNumericOperation(); }
-             | Expr  '%'  Expr { checkNumericOperation(); }
+             | Expr '*'  Expr { checkNumericOperation('*'); }
+             | Expr '/'  Expr { checkNumericOperation('/'); }
+             | Expr '%'  Expr { checkNumericOperation('%'); }
              | Designator {
                   currentDesignatorName = $1;
                   Symbol s = resolveDesignator("variable");
@@ -412,15 +412,75 @@ DecimalNumber: DECIMALNUMBER;
 
   }
 
-  private void checkNumericOperation() {
+  private void checkNumericOperation(char operation) {
     Symbol _1 = exprStack.pop();
     Symbol _3 = exprStack.pop();
 
-    if(_1 != _3) {
-      yyerror("Incompatible types for " + _1.name + " and " + _3.name + ".");
+    switch(operation) {
+	case '+':
+		if(_1 == getType("int") && _3 == getType("int")){
+			exprStack.push(getType("int"));
+		}
+		else if((_1 == getType("double") && _3 == getType("int"))  ||  (_1 == getType("int") && _3 == getType("double"))){
+			exprStack.push(getType("double"));
+		}else if(_1 == getType("double") && _3 == getType("double")){
+			exprStack.push(getType("double"));
+		}else {
+			yyerror("Incompatible types for " + _1.name + " and " + _3.name + ".");
+		}
+	break;
+	case '-':
+		if(_1 == getType("int") && _3 == getType("int")){
+			exprStack.push(getType("int"));
+		}
+		else if((_1 == getType("double") && _3 == getType("int"))  ||  (_1 == getType("int") && _3 == getType("double"))){
+			exprStack.push(getType("double"));
+		}else if(_1 == getType("double") && _3 == getType("double")){
+			exprStack.push(getType("double"));
+		}else {
+			yyerror("Incompatible types for " + _1.name + " and " + _3.name + ".");
+		}
+	break;
+	case '*':
+		if(_1 == getType("int") && _3 == getType("int")){
+			exprStack.push(getType("int"));
+		}
+		else if((_1 == getType("double") && _3 == getType("int"))  ||  (_1 == getType("int") && _3 == getType("double"))){
+			exprStack.push(getType("double"));
+		}else if(_1 == getType("double") && _3 == getType("double")){
+			exprStack.push(getType("double"));
+		}else {
+			yyerror("Incompatible types for " + _1.name + " and " + _3.name + ".");
+		}
+	break;
+	case '/':
+		if(_1 == getType("int") && _3 == getType("int")){
+			exprStack.push(getType("int"));
+		}
+		else if((_1 == getType("double") && _3 == getType("int"))  ||  (_1 == getType("int") && _3 == getType("double"))){
+			exprStack.push(getType("double"));
+		}else if(_1 == getType("double") && _3 == getType("double")){
+			exprStack.push(getType("double"));
+		}else {
+			yyerror("Incompatible types for " + _1.name + " and " + _3.name + ".");
+		}
+	break;
+	case '%':
+		if(_1 == getType("int") && _3 == getType("int")){
+			exprStack.push(getType("int"));
+		}
+		else if((_1 == getType("double") && _3 == getType("int"))  ||  (_1 == getType("int") && _3 == getType("double"))){
+			exprStack.push(getType("double"));
+		}else if(_1 == getType("double") && _3 == getType("double")){
+			exprStack.push(getType("double"));
+		}else {
+			yyerror("Incompatible types for " + _1.name + " and " + _3.name + ".");
+		}
+	break;
+	default:
+	      yyerror("Incompatible types for " + _1.name + " and " + _3.name + ".");
     }
-    exprStack.push(getType("int"));
-  }
+ }
 
 /*
  *  First of all, sorry for the long method. I swear, it was very very hard to think about it.
