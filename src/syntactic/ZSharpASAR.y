@@ -70,7 +70,6 @@ VarDecl    : Type IDENT {
 
 ListIDENT  : ',' IDENT {
                   Symbol variable = currentScope.addVariable($2, currentTypeVarDecl);
-
                   if(insideClassDecl) {
                     variable.kinds.add(Symbol.Kind.Field);
                   }
@@ -80,6 +79,7 @@ ListIDENT  : ',' IDENT {
      ;
 
 ClassDecl  : CLASS IDENT {
+              classDeclared($2);
               insideClassDecl = true;
               Symbol s = currentScope.addClass($2);
               currentScope.addLenMethod(s, getType("int"));
@@ -89,12 +89,10 @@ ClassDecl  : CLASS IDENT {
 ListVarDecl: VarDecl ListVarDecl
            | 
            ;
-MethodDecl : Type IDENT '(' { pushScope(currentScope.addMethod($2, getType($1))); } ')' ListVarDecl Block { popScope(currentScope); }
-           | VOID IDENT '(' { pushScope(currentScope.addMethod($2, getType("void"))); } ')' ListVarDecl Block { popScope(currentScope); }
-           | Type IDENT '(' { formPars = new ArrayList<Symbol>(); } FormPars {
-              
+MethodDecl : Type IDENT '(' {typeDeclared($1); pushScope(currentScope.addMethod($2, getType($1))); } ')' ListVarDecl Block { popScope(currentScope); }
+           | VOID IDENT '(' {pushScope(currentScope.addMethod($2, getType("void"))); } ')' ListVarDecl Block { popScope(currentScope); }
+           | Type IDENT '(' {typeDeclared($1); formPars = new ArrayList<Symbol>(); } FormPars {
               pushScope(currentScope.addMethod($2, getType($1), formPars));
-
             } ')' ListVarDecl Block { popScope(currentScope); }
            | VOID IDENT '(' { formPars = new ArrayList<Symbol>(); } FormPars {
               
@@ -107,6 +105,7 @@ ListMethodsDecl: { methodDeclaration = true; } MethodDecl { methodDeclaration = 
      ;
 
 FormPars   : Type IDENT {
+              typeDeclared($1);
               if(!currentTypeArray) {
                 formPars.add(currentScope.addVariable($2, getType($1)));
               } else {
@@ -114,6 +113,7 @@ FormPars   : Type IDENT {
               }
             }
            | Type IDENT {
+              typeDeclared($1);
               if(!currentTypeArray) {
                 formPars.add(currentScope.addVariable($2, getType($1)));
               } else {
@@ -124,13 +124,11 @@ FormPars   : Type IDENT {
 
 
 Type       : IDENT {
+              typeDeclared($1);
               currentTypeArray = false;
             }
            | IDENT '[' ']' {
-              Symbol type = getType($1);
-              if(type == null) {
-                yyerror("Error: " + $1 + " must be a type");
-              }
+              typeDeclared($1);
               currentTypeArray = true;
             }
            ;
@@ -349,6 +347,20 @@ DecimalNumber: DECIMALNUMBER;
       type = universe.getType(s);
     }
     return type;
+  }
+
+  private boolean typeDeclared(String s) {
+    boolean declared = getType(s) != null;
+    if(!declared)
+        yyerror("Type \""+ s +"\" was not declare before.");
+    return declared;
+  }
+
+  private boolean classDeclared(String s) {
+    boolean declared = getType(s) != null;
+    if(declared)
+        yyerror("Class \""+ s +"\" was already declare before.");
+    return declared;
   }
 
   private Symbol getMethod(String s) {
