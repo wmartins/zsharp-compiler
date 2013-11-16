@@ -157,7 +157,9 @@ Statment   : Designator '=' {
             } Expr { 
               Symbol type = exprStack.peek();
               if(currentSymbol.type != type) {
-                if(currentSymbol.type == getType("int") && type == getType("double")) {
+                if(currentSymbol.type == getType("double") && type == getType("int")) {
+
+                } else {
                   yyerror("Incompatible types for " + currentSymbol.type.name + " and " + type.name + ".");
                 }
               }
