@@ -244,14 +244,14 @@ ListExpr     : ',' Expr { actPars.add(exprStack.pop()); } ListExpr
              |
              ;
 
-Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
-             | Expr  LOGICALAND Expr  { checkLogicOperation(); }
-             | Expr  GTE  Expr { checkLogicOperation(); }
-             | Expr  EQEQ Expr { checkLogicOperation(); }
-             | Expr  DIF  Expr { checkLogicOperation(); }
-             | Expr  LTE  Expr { checkLogicOperation(); }
-             | Expr  '>'  Expr { checkLogicOperation(); }
-             | Expr  '<'  Expr { checkLogicOperation(); }
+Expr         : Expr LOGICALOR Expr { checkLogicOperation("||"); }
+             | Expr  LOGICALAND Expr  { checkLogicOperation("&&"); }
+             | Expr  GTE  Expr { checkLogicOperation(">="); }
+             | Expr  EQEQ Expr { checkLogicOperation("=="); }
+             | Expr  DIF  Expr { checkLogicOperation("!="); }
+             | Expr  LTE  Expr { checkLogicOperation("<="); }
+             | Expr  '>'  Expr { checkLogicOperation(">"); }
+             | Expr  '<'  Expr { checkLogicOperation("<"); }
              | Expr  '+'  Expr { checkNumericOperation('+'); }
              | Expr  '-'  Expr { checkNumericOperation('-'); }
              | '-' Expr  %prec NEG {
@@ -413,12 +413,21 @@ DecimalNumber: DECIMALNUMBER;
     return constant;
   }
 
-  private void checkLogicOperation() {
+  private void checkLogicOperation(String operation) {
     Symbol _1 = exprStack.pop();
     Symbol _3 = exprStack.pop();
 
     if(_1 == getType("null") || _3 == getType("null")) {
       return;
+    }
+
+    if(!operation.equals("==") && !operation.equals("!=")) {
+      if(!_1.kinds.contains(Symbol.Kind.BasicType)) {
+        yyerror(_1.name + " must be checked only for equality or inequality.");
+      }
+      if(!_3.kinds.contains(Symbol.Kind.BasicType)) {
+        yyerror(_3.name + " must be checked only for equality or inequality.");
+      }
     }
 
     if(_1 != _3) {

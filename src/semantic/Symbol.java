@@ -14,6 +14,7 @@ public class Symbol {
 		, Method
 		, Type
 		, Argument
+		, BasicType
 	}
 
 	public Symbol parent;
@@ -44,6 +45,7 @@ public class Symbol {
 			intSymbol.name = "int";
 			types.put("int", intSymbol);
 			intSymbol.kinds.add(Kind.Type);
+			intSymbol.kinds.add(Kind.BasicType);
 
 			ArrayList<Symbol> intParams = new ArrayList<Symbol>();
 			Symbol intParam = new Symbol();
@@ -56,6 +58,7 @@ public class Symbol {
 			doubleSymbol.name = "double";
 			types.put("double", doubleSymbol);
 			doubleSymbol.kinds.add(Kind.Type);
+			doubleSymbol.kinds.add(Kind.BasicType);
 
 			ArrayList<Symbol> doubleParams = new ArrayList<Symbol>();
 			Symbol doubleParam = new Symbol();
@@ -63,11 +66,12 @@ public class Symbol {
 			doubleParam.type = doubleParam;
 			doubleParams.add(doubleParam);
 			addMethod("len", doubleSymbol, doubleParams);
-//Add
+
 			Symbol stringSymbol = new Symbol();
 			stringSymbol.name = "string";
 			types.put("string", stringSymbol);
 			stringSymbol.kinds.add(Kind.Type);
+			stringSymbol.kinds.add(Kind.BasicType);
 
 			ArrayList<Symbol> stringParams = new ArrayList<Symbol>();
 			Symbol stringParam = new Symbol();
@@ -76,11 +80,11 @@ public class Symbol {
 			stringParams.add(stringParam);
 			addMethod("len", stringSymbol, stringParams);
 
-//Add ends
 			Symbol charSymbol = new Symbol();
 			charSymbol.name = "char";
 			types.put("char", charSymbol);
 			charSymbol.kinds.add(Kind.Type);
+			charSymbol.kinds.add(Kind.BasicType);
 
 			ArrayList<Symbol> charParams = new ArrayList<Symbol>();
 			Symbol charParam = new Symbol();
@@ -93,14 +97,18 @@ public class Symbol {
 			booleanSymbol.name = "boolean";
 			types.put("boolean", booleanSymbol);
 			booleanSymbol.kinds.add(Kind.Type);
+			booleanSymbol.kinds.add(Kind.BasicType);
 
 			Symbol voidSymbol = new Symbol();
 			voidSymbol.name = "void";
 			types.put("void", voidSymbol);
 			voidSymbol.kinds.add(Kind.Type);
+			voidSymbol.kinds.add(Kind.BasicType);
 
 			Symbol nullSymbol = new Symbol();
 			nullSymbol.name = "null";
+			nullSymbol.kinds.add(Kind.Type);
+			nullSymbol.kinds.add(Kind.BasicType);
 			constants.put("null", nullSymbol);
 			types.put("null", nullSymbol);
 
