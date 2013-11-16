@@ -14,7 +14,7 @@
 	public Yylex(java.io.Reader r, Parser yyparser) {
 		this(r);
 		this.yyparser = yyparser;
-	}	
+	}
 %}
 %public
 %class Yylex
@@ -50,7 +50,7 @@ public static void main(String[] argv) {
 			}
 		}
 	}
-	
+
 }
 
 public int getLine() {
@@ -85,9 +85,9 @@ public int getColumn() {
 "]"|
 "{"|
 "}"|
-";"|				
-">"|					
-"<" {return yycharat(0);}
+";"|
+">"|
+"<" 					{return yycharat(0);}
 
 "=="					{ return Parser.EQEQ; }
 "!="				        { return Parser.DIF; }
@@ -99,20 +99,19 @@ public int getColumn() {
 "--"					{ return Parser.ADDITIVESUB;}
 
 "if" 					{ return Parser.IF; }
-"break"				{ return Parser.BREAK; }
-"const"				{ return Parser.CONST; }
-"else"		 		{ return Parser.ELSE; }
-"class"				{ return Parser.CLASS;}
-"new"				{ return Parser.NEW; }
-"read"		 		{ return Parser.READ; }
-"write"				{ return Parser.WRITE;}
-"void"				{ return Parser.VOID; }
-"while"		 		{ return Parser.WHILE; }
-"return"			{ return Parser.RETURN;}
-
+"break"					{ return Parser.BREAK; }
+"const"					{ return Parser.CONST; }
+"else"			 		{ return Parser.ELSE; }
+"class"					{ return Parser.CLASS;}
+"new"					{ return Parser.NEW; }
+"read"			 		{ return Parser.READ; }
+"write"					{ return Parser.WRITE;}
+"void"					{ return Parser.VOID; }
+"while"			 		{ return Parser.WHILE; }
+"return"				{ return Parser.RETURN;}
 '[ -&(-~]+'				{ return Parser.CHARCONST; }
-[a-zA-Z][a-zA-Z0-9_]*		{ yyparser.yylval = new ParserVal(yytext()); return Parser.IDENT; }
-[0-9]+\.[0-9]+		{ return Parser.DECIMALNUMBER; }
-[0-9]+				{ return Parser.NUMBER; }
-
+[a-zA-Z][a-zA-Z0-9_]*			{ yyparser.yylval = new ParserVal(yytext()); return Parser.IDENT; }
+[0-9]+\.[0-9]+				{ return Parser.DECIMALNUMBER; }
+[0-9]+					{ return Parser.NUMBER; }
+\".*\" 					{ return Parser.STRING; }
 . { System.out.println(yyline + 1 + ": invalid character: " + yytext()); }
