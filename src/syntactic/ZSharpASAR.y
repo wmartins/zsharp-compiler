@@ -199,21 +199,21 @@ Statment   : Designator '=' {
         if(s != null) {
           if(!s.kinds.contains(Symbol.Kind.Variable)) {
             yyerror("Read must have as parameter a variable, object field or array, " + s.name + " isn't any of that.");
-          } else if(!s.type.name.equals("int") && !s.type.name.equals("char")) {
-            yyerror("Read must have as parameter int or char.");
+          } else if(!s.type.name.equals("int") && !s.type.name.equals("char")&& s.type!= getType("string")) {
+            yyerror("Read must have as parameter int, char or string.");
           }
         }
       } ')' ';'
      | WRITE '(' Expr {
         Symbol type = exprStack.pop();
-        if(type != getType("int") && type!= getType("char")) {
-          yyerror("Write operation can only be applied to int or char, " + type.name + " is not any of that.");
+        if(type != getType("int") && type!= getType("char")&& type!= getType("string")) {
+          yyerror("Write operation can only be applied to int  or char or string, " + type.name + " is not any of that.");
         }
       } ')' ';'
      | WRITE '(' Expr {
         Symbol type = exprStack.pop();
-        if(type != getType("int") && type!= getType("char")) {
-          yyerror("Write operation can only be applied to int or char, " + type.name + " is not any of that.");
+        if(type != getType("int") && type!= getType("char")&& type!= getType("string")) {
+          yyerror("Write operation can only be applied to int  or char or string, " + type.name + " is not any of that.");
         }
       } ',' NUMBER  ')' ';'
      | Block
