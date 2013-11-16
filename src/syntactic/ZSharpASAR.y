@@ -260,6 +260,7 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation("||"); }
                   yyerror("The unary minus operation can be only applied to int, " + type.name + " is not int.");
                 }
                 exprStack.push(type);
+                exprArrayStack.push(false);
 
               }
              | Expr '*'  Expr { checkNumericOperation('*'); }
@@ -276,6 +277,7 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation("||"); }
                   } else {
                     exprStack.push(s.type);
                   }
+                  exprArrayStack.push(s.kinds.contains(Symbol.Kind.Array));
               }
              | Designator '(' ')' {
                 actPars = new ArrayList<Symbol>();
@@ -286,6 +288,7 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation("||"); }
                 } else {
                   exprStack.push(s.type);
                 }
+                exprArrayStack.push(s.kinds.contains(Symbol.Kind.Array));
               }
              | Designator '(' ActPars { 
                 currentDesignatorName = $1;
@@ -295,14 +298,16 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation("||"); }
                 } else {
                   exprStack.push(s.type);
                 }
+                exprArrayStack.push(s.kinds.contains(Symbol.Kind.Array));
               } ')'
-             | DecimalNumber { exprStack.push(getType("double")); }
-             | IntegerNumber { exprStack.push(getType("int")); /* TODO: */ }
-             | CHARCONST { exprStack.push(getType("char")); /* TODO: */ }
-             | STRING { exprStack.push(getType("string")); /* TODO: */ }
+             | DecimalNumber { exprStack.push(getType("double")); exprArrayStack.push(false); }
+             | IntegerNumber { exprStack.push(getType("int")); exprArrayStack.push(false); }
+             | CHARCONST { exprStack.push(getType("char")); exprArrayStack.push(false); }
+             | STRING { exprStack.push(getType("string")); exprArrayStack.push(false); }
              | NEW IDENT { 
                 Symbol s = getType($2);
                 exprStack.push(s);
+                exprArrayStack.push(false);
              }
              | NEW IDENT '[' Expr {
                 Symbol s = exprStack.pop();
@@ -311,6 +316,7 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation("||"); }
                 }
                 Symbol type = getType($2);
                 exprStack.push(type);
+                exprArrayStack.push(true);
               } ']'
              | '(' Expr ')'
              ;
@@ -338,7 +344,7 @@ DecimalNumber: DECIMALNUMBER;
   private static Symbol universe, currentScope, programScope, currentTypeVarDecl, currentSymbol;
   private static StackStack<String> designatorStack;
   private static boolean insideWhileLoop, insideClassDecl, currentTypeArray, methodDeclaration, designatorMustBeArray;
-  private static Stack<Boolean> designatorMustBeArrayStack;
+  private static Stack<Boolean> designatorMustBeArrayStack, exprArrayStack;
   private static Stack<Symbol> exprStack;
   private static String currentDesignatorName;
   private static ArrayList<Symbol> formPars, actPars;
@@ -416,6 +422,7 @@ DecimalNumber: DECIMALNUMBER;
   private void checkLogicOperation(String operation) {
     Symbol _1 = exprStack.pop();
     Symbol _3 = exprStack.pop();
+    exprArrayStack.push(false);
 
     if(_1 == getType("null") || _3 == getType("null")) {
       return;
@@ -425,8 +432,14 @@ DecimalNumber: DECIMALNUMBER;
       if(!_1.kinds.contains(Symbol.Kind.BasicType)) {
         yyerror(_1.name + " must be checked only for equality or inequality.");
       }
+      if(exprArrayStack.pop()) {
+        yyerror("Arrays must be checked only for equality or inequality.");
+      }
       if(!_3.kinds.contains(Symbol.Kind.BasicType)) {
         yyerror(_3.name + " must be checked only for equality or inequality.");
+      }
+      if(exprArrayStack.pop()) {
+        yyerror("Arrays must be checked only for equality or inequality.");
       }
     }
 
@@ -434,12 +447,14 @@ DecimalNumber: DECIMALNUMBER;
       yyerror("Incompatible types for " + _1.name + " and " + _3.name + ".");
     }
     exprStack.push(getType("boolean"));
-
   }
 
   private void checkNumericOperation(char operation) {
     Symbol _1 = exprStack.pop();
     Symbol _3 = exprStack.pop();
+
+    exprArrayStack.pop();
+    exprArrayStack.pop();
 
     switch(operation) {
 	case '+':
@@ -511,6 +526,7 @@ DecimalNumber: DECIMALNUMBER;
 	default:
 	      yyerror("Incompatible types for " + _1.name + " and " + _3.name + ".");
     }
+    exprArrayStack.push(false);
  }
 
 /*
@@ -651,6 +667,7 @@ DecimalNumber: DECIMALNUMBER;
     formPars = new ArrayList<Symbol>();
     actPars = new ArrayList<Symbol>();
     designatorMustBeArrayStack = new Stack<Boolean>();
+    exprArrayStack = new Stack<Boolean>();
 
     System.out.println("");
 
