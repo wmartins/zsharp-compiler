@@ -41,18 +41,26 @@ ListDecl   : ConstDecl ListDecl
   
 ConstDecl  : CONST Type IDENT '=' IntegerNumber ';' {
               Symbol type = getType($2);
+              if(type!=getType("int"))
+                 yyerror("Can't be associated an integer value to the current type: "+ $2 +".");
               currentScope.addConstant($3, type);
             }
      | CONST Type IDENT '=' DecimalNumber ';' {
               Symbol type = getType($2);
+              if(type!=getType("double"))
+                 yyerror("Can't be associated a double value to the current type: "+ $2 +".");
               currentScope.addConstant($3, type);
             }
      | CONST Type IDENT '=' CHARCONST';' {
             Symbol type = getType($2);
+              if(type!=getType("char"))
+                 yyerror("Can't be associated a char value to the current type: "+ $2 +".");
             currentScope.addConstant($3, type); 
           }
      | CONST Type IDENT '=' STRING';' {
             Symbol type = getType($2);
+            if(type!=getType("string"))
+               yyerror("Can't be associated a string value to the current type: "+ $2 +".");
             currentScope.addConstant($3, type); 
           }
      ;
