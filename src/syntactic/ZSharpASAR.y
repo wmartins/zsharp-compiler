@@ -17,6 +17,7 @@
 %token ADDITIVESUM ADDITIVESUB LOGICALAND LOGICALOR CHARCONST
 %token IF BREAK CONST ELSE CLASS NEW READ WRITE VOID WHILE RETURN
 %token IDENT DECIMALNUMBER NUMBER
+%token STRING
 
 %left LOGICALOR
 %left LOGICALAND
@@ -47,6 +48,10 @@ ConstDecl  : CONST Type IDENT '=' IntegerNumber ';' {
               currentScope.addConstant($3, type);
             }
      | CONST Type IDENT '=' CHARCONST';' {
+            Symbol type = getType($2);
+            currentScope.addConstant($3, type); 
+          }
+     | CONST Type IDENT '=' STRING';' {
             Symbol type = getType($2);
             currentScope.addConstant($3, type); 
           }
@@ -284,6 +289,7 @@ Expr         : Expr LOGICALOR Expr { checkLogicOperation(); }
              | DecimalNumber { exprStack.push(getType("double")); }
              | IntegerNumber { exprStack.push(getType("int")); /* TODO: */ }
              | CHARCONST { exprStack.push(getType("char")); /* TODO: */ }
+             | STRING { exprStack.push(getType("string")); /* TODO: */ }
              | NEW IDENT { 
                 Symbol s = getType($2);
                 exprStack.push(s);
@@ -423,6 +429,12 @@ DecimalNumber: DECIMALNUMBER;
 		}
 		else if((_1 == getType("double") && _3 == getType("int"))  ||  (_1 == getType("int") && _3 == getType("double"))){
 			exprStack.push(getType("double"));
+		}else if(_1 == getType("string") && _3 == getType("string")){
+			exprStack.push(getType("string"));
+		}else if((_1 == getType("int") && _3 == getType("string"))  ||  (_1 == getType("string") && _3 == getType("int"))){
+			exprStack.push(getType("string"));
+		}else if((_1 == getType("double") && _3 == getType("string"))  ||  (_1 == getType("string") && _3 == getType("double"))){
+			exprStack.push(getType("string"));
 		}else if(_1 == getType("double") && _3 == getType("double")){
 			exprStack.push(getType("double"));
 		}else {
