@@ -3,8 +3,9 @@
  * Description about the language avaliable at:
  *   http://dotnet.jku.at/courses/CC/
  *
- * @author Italo Lobato Qualisoni - 12104861-5 - <italo.qualisoni@acad.pucrs.br>
- * @author William Henrihque Martins - 12104965-4 - <william.henrihque@acad.pucrs.br>
+ * @author Italo Lobato Qualisoni 	- 12104861-5 - 		<italo.qualisoni@acad.pucrs.br>
+ * @author Lorenzo Kniss 		- 12111541-4 - 		<lorenzo.kniss@acad.pucrs.br>
+ * @author William Henrihque Martins 	- 12104965-4 - 		<william.henrihque@acad.pucrs.br>
  */
 %%
 

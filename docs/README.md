@@ -8,7 +8,10 @@ Autores:
 
 Italo Lobato Qualisoni - 12104861-5 - <italo.qualisoni@acad.pucrs.br>
 
+Lorenzo Kniss - 12111541-4 - <lorenzo.kniss@acad.pucrs.br>
+
 William Henrihque Martins - 12104965-4 - <william.henrihque@acad.pucrs.br>
+
 
 Estrutura de arquivos:
 ======================
