@@ -24,14 +24,14 @@
 </head>
 <body>
   <article>
-    <h1>Relatório sobre a implementação de um analisador léxico e um analisador sintático para a linguagem ZSharp (Z#).</h1>
+    <h1>Relatório sobre a implementação de um analisador léxico, um analisador sintático e um analisador semântico para a linguagem ZSharp (Z#).</h1>
     <section id="about">
       <h1>1. Sobre este trabalho</h1>
       <p>Este trabalho foi implementado com o intuito de servir como um estudo sobre a disciplina de compiladores, ministrada pelo professor Alexandre Agustini na Pontifícia Universidade Católica do Rio Grande do Sul (PUCRS).</p>
       <p>Neste, foi realizado o desenvolvimento de um analisador léxico e um analisador sintático para um subconjunto reduzido da linguagem C#, denominado Z# (<a href="http://dotnet.jku.at/courses/CC/">http://dotnet.jku.at/courses/CC/</a>).</p>
       <h2>1.1. Autores</h2>
       <p>Italo Lobato Qualisoni - 12104861-5 - <a href="mailto:italo.qualisoni@acad.pucrs.br">italo.qualisoni@acad.pucrs.br</a></p>
-      <p>Lorenzo Kniss - 12111541-4 - <a href="mailto:william.henrihque@acad.pucrs.br">lorenzo.kniss@acad.pucrs.br</a></p>
+      <p>Lorenzo Kniss - 12111541-4 - <a href="mailto:lorenzo.kniss@acad.pucrs.br">lorenzo.kniss@acad.pucrs.br</a></p>
       <p>William Henrihque Martins - 12104965-4 - <a href="mailto:william.henrihque@acad.pucrs.br">william.henrihque@acad.pucrs.br</a></p>   
  </section>
     <section>
@@ -105,7 +105,18 @@
       <p>Ainda existe uma outra maneira utilizando o modo interativo. Para tal, basta executar o comando <code>java Parser</code> que será aberto o terminal interativo. Então, basta digitar a entrada e apertar a tecla &lt;ENTER&gt;.</p>
     </section>
     <section>
-      <h1>7. Testes da solução</h1>
+      <h1>7. Estrutura da análise semântica</h1>
+      <p>Para a análise semântica, foi necessária a criação de duas novas classes, a classe StackStack.java, que nada mais é que uma estrutura de dados do tipo pilha, e a classe Symbol.Java, que seria a tabela de símbolos do compilador.</p>
+      <p>A classe Stack.java foi criada pois houve a necessidade de utilizar uma estrutura que pudesse armazenar os escopos, para que alguns comandos como <code>if</code>, <code>while</code>, por exemplo, pudessem ser aninhados.</p>
+      <p>A tabela de símbolos, que foi interpretada pela classe Symbol.java, é muito importante para esta etapa da compilação, pois é nela que são agrupadas todas as possibilidades, além de que, com a utilização dos métodos dela nos permite fazermos diversas verificações no arquivo sintático, afim de validar a semântica do código.</p>
+      <h2>7.1 Utilizando o analisador semântico</h2>
+      <p>Para realizarmos um teste após a criação do analisador semântico é muito simples, basta rodarmos o comando <code>./testes/teste_single.sh Testes.zs</code> por exemplo.</p>
+      <h2>7.2 Teste semântico</h2>
+      <p>Realizamos um simples teste para forçar um erro e mostrar a mensagem ao usuário. Na classe Testes.zs, criamos uma constante <code>const int i = 10;</code> e num escopo diferente, dentro de um método, tentamos redeclarar a variável da seguinte forma <code>int i;</code>.</p>
+      <p>O resultado foi o esperado: 'Variable i was already declare before and is a constant variable'.</p>
+    </section>
+    <section>
+      <h1>8. Testes da solução</h1>
       <p>Existem 10 exemplos de código Z# que foram fornecidos para download no site <a href="http://dotnet.jku.at/courses/CC/">http://dotnet.jku.at/courses/CC/</a> e estão localizados localmente na pasta 'samples'. Dentre os exemplos, apenas 1 possui erros no código, portanto, é o único arquivo que não irá compilar, apresentando erros de compilação.</p>
       <p>Os arquivos da pasta samples encontram-se da seguinte forma:</p>
 <pre>
@@ -121,10 +132,10 @@
     TestBuiltInFuncs.zs           - Arquivo correto. Deve compilar.
     TestNoRetFunc.zs              - Arquivo correto. Deve compilar.
 </pre>
-    <h2>7.1. Utilizando testes automatizados</h2>
+    <h2>8.1. Utilizando testes automatizados</h2>
     <p>Dentro da pasta 'tests', fizemos a criação de um script em bash para o teste automático de todos os exemplos localizados na pasta 'samples', tal script foi chamado de 'test_all.sh'. Dessa forma, esse script faz a tentativa de compilação de todos os arquivos da pasta 'samples', mostrando a mensagem 'done!' quando a compilação é finalizada e, em caso de erro, mostrando a saída de erro que o compilador gera.</p>
     <p>Para executar esses testes, basta entrar na pasta 'tests' e executar o script 'test_all.sh'.</p>
-    <h2>7.2. Execução do teste automatizado</h2>
+    <h2>8.2. Execução do teste automatizado</h2>
     <p>Rodando o comando <code>./test_all.sh</code>, obtivemos a seguinte saída:</p>
 <pre>
 
@@ -158,12 +169,12 @@ Testing [TestNoRetFunc.zs] - this file must compile
 done!
 </pre>
       <p>Com esses resultados, mostramos que a nossa solução funciona para esses 10 casos, mostrando assim que a implementação está correta e funciona conforme especificado.</p>
-    <h2>7.3. Execução do teste automatizado a partir do comando <code>make test</code></h2>
+    <h2>8.3. Execução do teste automatizado a partir do comando <code>make test</code></h2>
     <p>O comando <code>make test</code> irá recompilar a estrutura lexica e sintatica e executar em seguida o comando <code>./test_all.sh</code>, gerando a saída da recompilação seguida dos resultados dos testes presentes na pasta 'samples'.</p>
     </section>
     <section>
-      <h1>8. Conclusões</h1>
-      <p>Este trabalho nos mostrou como realmente funcionam duas partes muito importantes nos compiladores, que são a análise léxica e a análise sintática. Nos mostrou ainda que essas duas partes andam muito juntas e são dependentes uma da outra, dessa forma, quando uma delas possui algum tipo de erro, é bem provável que a outra, por mais que pareça estar certa, não vai funcionar corretamente.</p>
+      <h1>0. Conclusões</h1>
+      <p>Este trabalho nos mostrou como realmente funcionam três partes muito importantes nos compiladores, que são a análise léxica, análise sintática e a semântica. Nos mostrou ainda que essaspartes andam muito juntas e são dependentes uma da outra, dessa forma, quando uma delas possui algum tipo de erro, é bem provável que a outra, por mais que pareça estar certa, não vai funcionar corretamente.</p>
     </section>
   </article>
 </body>
