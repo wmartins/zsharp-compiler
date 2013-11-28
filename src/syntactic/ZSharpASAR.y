@@ -41,26 +41,34 @@ ListDecl   : ConstDecl ListDecl
   
 ConstDecl  : CONST Type IDENT '=' IntegerNumber ';' {
               Symbol type = getType($2);
-              if(type!=getType("int"))
+              if(type!=getType("int") )
                  yyerror("Can't be associated an integer value to the current type: "+ $2 +".");
-              currentScope.addConstant($3, type);
+	      if(currentScope.getConstant($3)!=null||currentScope.getVariable($3)!=null)
+                 yyerror("This variable "+$3+" was already declared before.");              
+		currentScope.addConstant($3, type);
             }
      | CONST Type IDENT '=' DecimalNumber ';' {
               Symbol type = getType($2);
               if(type!=getType("double"))
                  yyerror("Can't be associated a double value to the current type: "+ $2 +".");
+	      if(currentScope.getConstant($3)!=null||currentScope.getVariable($3)!=null)
+                 yyerror("This variable "+$3+" was already declared before.");    
               currentScope.addConstant($3, type);
             }
      | CONST Type IDENT '=' CHARCONST';' {
             Symbol type = getType($2);
               if(type!=getType("char"))
                  yyerror("Can't be associated a char value to the current type: "+ $2 +".");
-            currentScope.addConstant($3, type); 
+            if(currentScope.getConstant($3)!=null||currentScope.getVariable($3)!=null)
+                 yyerror("This variable "+$3+" was already declared before.");    
+     	    currentScope.addConstant($3, type); 
           }
      | CONST Type IDENT '=' STRING';' {
             Symbol type = getType($2);
             if(type!=getType("string"))
                yyerror("Can't be associated a string value to the current type: "+ $2 +".");
+            if(currentScope.getConstant($3)!=null||currentScope.getVariable($3)!=null)
+               yyerror("This variable "+$3+" was already declared before.");    
             currentScope.addConstant($3, type); 
           }
      ;
@@ -68,13 +76,14 @@ ConstDecl  : CONST Type IDENT '=' IntegerNumber ';' {
 VarDecl    : Type IDENT {
               Symbol type = getType($1);
               Symbol variable;
+	      if(currentScope.getVariable($2)!= null || constantDeclared($2) || variableDeclared($2))
+                 yyerror("This variable "+$2+" was already declared before.");
               if(!currentTypeArray) {
                 variable = currentScope.addVariable($2, type);
               } else {
                 variable = currentScope.addArrayVariable($2, type);
-              }
+              }	
               currentTypeVarDecl = type;
-
               if(insideClassDecl) {
                 variable.kinds.add(Symbol.Kind.Field);
               }
@@ -82,6 +91,8 @@ VarDecl    : Type IDENT {
             } ListIDENT ';';
 
 ListIDENT  : ',' IDENT {
+                  if(currentScope.getVariable($2)!= null || constantDeclared($2)|| variableDeclared($2))
+                    yyerror("This variable "+$2+" was already declared before.");
                   Symbol variable = currentScope.addVariable($2, currentTypeVarDecl);
                   if(insideClassDecl) {
                     variable.kinds.add(Symbol.Kind.Field);
@@ -360,7 +371,21 @@ DecimalNumber: DECIMALNUMBER;
     currentScope = s.parent;
     return s;
   }
-
+  
+ private boolean constantDeclared(String s) {
+    Symbol variable = currentScope.parent.getConstant(s);
+    boolean declared = variable != null;
+    if(variable != null)
+        yyerror("Variable \""+ s +"\" was already declare before and is a constant variable.");
+    return declared;
+  }
+ private boolean variableDeclared(String s) {
+    Symbol variable = currentScope.parent.getVariable(s);
+    boolean declared = variable != null;
+    if(variable != null)
+        yyerror("Variable \""+ s +"\" was already declare before and is a constant variable.");
+    return declared;
+  }
   private Symbol getType(String s) {
     Symbol type = currentScope.getType(s);
     if(type == null) {
